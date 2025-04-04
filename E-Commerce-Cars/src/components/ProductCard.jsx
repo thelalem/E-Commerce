@@ -9,6 +9,7 @@ const ProductCard = ({ product }) => {
     const { addToCart } = useCart();
     const { currentUser } = useAuth();
     const { isFavorite, addToFavorites, removeFromFavorites } = useFavorites();
+    const navigate = useNavigate();
 
     const handleAddToCart = () => {
         if(!currentUser){
@@ -32,6 +33,7 @@ const ProductCard = ({ product }) => {
         e.stopPropagation(); // Prevent event bubbling to parent element
         if(!currentUser){
             navigate('/login');
+            return;
         }
         if (isFavorite(product.id)) {
             removeFromFavorites(product.id);
