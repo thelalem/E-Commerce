@@ -1,14 +1,11 @@
+import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { Link } from 'react-router-dom';
 
 const CartPage = () => {
-  const {
-    cartItems,
-    removeFromCart,
-    updateQuantity,
-    cartTotal,
-    clearCart
-  } = useCart();
+  const {currentUser} = useAuth();
+  const { cartItems, removeFromCart, updateQuantity, clearCart, cartTotal, cartCount } = useCart();
+  
 
   return (
     <div className="container mx-auto p-4">

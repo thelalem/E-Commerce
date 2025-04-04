@@ -1,23 +1,33 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from './AuthContext';
 
 const FavoritesContext = createContext();
 
 export const FavoritesProvider = ({ children }) => {
+  const currentUser = useAuth();
   const [favorites, setFavorites] = useState([]);
 
-  // Load favorites from localStorage on mount
+  // Load favorites from localStorage wwhen the user logs in
+
   useEffect(() => {
-    const savedFavorites = localStorage.getItem('favorites');
-    if (savedFavorites) {
-      setFavorites(JSON.parse(savedFavorites));
+    if (currentUser) {
+      const favoritesKey = `favorites_${currentUser.id}`; // Use a user-specific key
+      const savedFavorites = localStorage.getItem(favoritesKey);
+      if (savedFavorites) {
+        setFavorites(JSON.parse(savedFavorites));
+      } else {
+        setFavorites([]); // Initialize an empty favorites list for new users
+      }
     }
-  }, []);
+  }, [currentUser]);
 
   // Save favorites to localStorage when they change
   useEffect(() => {
-    localStorage.setItem('favorites', JSON.stringify(favorites));
-  }, [favorites]);
-
+    if (currentUser) {
+      const favoritesKey = `favorites_${currentUser.id}`; // Use a user-specific key
+      localStorage.setItem(favoritesKey, JSON.stringify(favorites));
+    }
+  }, [favorites, currentUser]);
   const addToFavorites = (product) => {
     setFavorites(prevFavorites => {
       // Check if product is already favorited

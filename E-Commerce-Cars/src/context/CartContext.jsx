@@ -1,22 +1,32 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from './AuthContext';
 
 const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
+  const {currentUser} = useAuth();
   const [cartItems, setCartItems] = useState([]);
 
-  // Load cart from localStorage on initial render
+  // Load cart from localStorage when user logs in
   useEffect(() => {
-    const savedCart = localStorage.getItem('cart');
-    if (savedCart) {
-      setCartItems(JSON.parse(savedCart));
+    if (currentUser) {
+      const cartKey = `cart_${currentUser.id}`; // Use a user-specific key
+      const savedCart = localStorage.getItem(cartKey);
+      if (savedCart) {
+        setCartItems(JSON.parse(savedCart));
+      } else {
+        setCartItems([]); // Initialize an empty cart for new users
+      }
     }
-  }, []);
+  }, [currentUser]);
 
   // Save cart to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(cartItems));
-  }, [cartItems]);
+    if (currentUser) {
+      const cartKey = `cart_${currentUser.id}`; // Use a user-specific key
+      localStorage.setItem(cartKey, JSON.stringify(cartItems));
+    }
+  }, [cartItems, currentUser]);
 
   const addToCart = (product) => {
     setCartItems(prevItems => {

@@ -8,6 +8,7 @@ export const mockProducts = [
     location: "New York",
     description: "A luxury SUV with advanced features and a comfortable ride.",
     seller: "Auto Dealer",
+    contact: "autodealer@example.com",
   },
   {
     id: 2,
@@ -18,6 +19,7 @@ export const mockProducts = [
     location: "Los Angeles",
     description: "An electric sedan with cutting-edge technology and performance.",
     seller: "Auto Dealer",
+    contact: "autodealer@example.com",
   },
   {
     id: 3,
@@ -28,6 +30,7 @@ export const mockProducts = [
     location: "Chicago",
     description: "A reliable and powerful pickup truck for all your needs.",
     seller: "Auto Dealer",
+    contact: "autodealer@example.com",
   },
   {
     id: 4,
@@ -38,6 +41,7 @@ export const mockProducts = [
     location: "New York",
     description: "A compact sedan known for its reliability and fuel efficiency.",
     seller: "Auto Dealer",
+    contact: "autodealer@example.com",
   },
   {
     id: 5,
@@ -48,6 +52,7 @@ export const mockProducts = [
     location: "Los Angeles",
     description: "A luxury SUV with a sporty design and premium features.",
     seller: "Auto Dealer",
+    contact: "autodealer@example.com",
   },
   {
     id: 6,
@@ -58,6 +63,7 @@ export const mockProducts = [
     location: "Chicago",
     description: "A durable and versatile pickup truck for heavy-duty tasks.",
     seller: "Auto Dealer",
+    contact: "autodealer@example.com",
   },
   {
     id: 7,
@@ -68,6 +74,7 @@ export const mockProducts = [
     image: "/cars/toyota-rav4.jpg",
     description: "A compact SUV with great fuel efficiency and modern features.",
     seller: "Auto Dealer",
+    contact: "autodealer@example.com",
   },
   {
     id: 8,
@@ -78,6 +85,7 @@ export const mockProducts = [
     image: "/cars/honda-accord.jpg",
     description: "A midsize sedan with a sleek design and advanced safety features.",
     seller: "Auto Dealer",
+    contact: "autodealer@example.com",
   },
   {
     id: 9,
@@ -88,5 +96,6 @@ export const mockProducts = [
     image: "/cars/chevrolet-tahoe.jpg",
     description: "A full-size SUV with ample space and powerful performance.",
     seller: "Auto Dealer",
+    contact: "autodealer@example.com",
   },
 ];

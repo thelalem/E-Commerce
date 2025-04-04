@@ -1,186 +1,125 @@
-import React,{useState, useEffect, use} from "react";
-import { mockProducts } from "../utils/mockProducts";
-import Header from "../components/Header";
-import ProductCard from "../components/ProductCard";
+import React, { useState, useEffect } from 'react';
+import Header from '../components/Header';
+import { Link } from 'react-router-dom';
+import ProductCard from '../components/ProductCard';
+import { mockProducts } from '../utils/mockProducts';
 
-function HomePage(){
-    const[products, setProducts] = useState([]);
-    const [searchQuery, setSearchQuery] = useState("");
-    const [filteredProducts, setFilteredProducts] = useState([]);
-    const [category, setCategory] = useState("");
-    const [location,setLocation] = useState("");
-    const [priceRange, setPriceRange] = useState("");
+function HomePage() {
+  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        const fetchProducts = async () => {
-            try {
-                await new Promise(resolve => setTimeout(resolve, 1000)); 
-                
-                setProducts(mockProducts);
-                setFilteredProducts(mockProducts);
-            } catch (error) {
-                console.error("Error fetching products:", error);
-            }
-        };
-    
-        fetchProducts();
-    }, []);
-    
+  useEffect(() => {
+    // Simulate API call to get featured products
+    const fetchFeaturedProducts = async () => {
+      try {
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        // Filter featured products (you could add a 'featured' flag to your mock data)
+        const featured = mockProducts
+          .sort(() => 0.5 - Math.random()) // Randomize
+          .slice(0, 4); // Get first 4
+        
+        setFeaturedProducts(featured);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching featured products:", error);
+        setLoading(false);
+      }
+    };
 
-    useEffect(() => {
-        console.log("Filtered Products:", filteredProducts);
-      }, [filteredProducts]);
-      
+    fetchFeaturedProducts();
+  }, []);
 
-    useEffect(() => {
-        let filtered = products.filter((product) =>
-          product.name.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-    
-        if (category) {
-          filtered = filtered.filter((product) => product.category === category);
-        }
-    
-        if (location) {
-          filtered = filtered.filter((product) => product.location === location);
-        }
-    
-        if (priceRange) {
-          filtered = filtered.filter((product) => {
-            const price = parseInt(product.price.replace(/[^0-9]/g, ""));
-            if (priceRange === "0-30000") return price >= 0 && price <= 30000;
-            if (priceRange === "30001-60000") return price > 30000 && price <= 60000;
-            if (priceRange === "60001+") return price > 60000;
-            return true;
-          });
-        }
-    
-        setFilteredProducts(filtered);
-      }, [searchQuery, category, location, priceRange, products]);
-
-
-      return (
-        <div className="min-h-screen bg-gray-50">
-            <Header />
-            <div className="container mx-auto px-4 py-8">
-                {/* Hero Section */}
-                <div className="mb-12 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl p-8 text-white">
-                    <h1 className="text-4xl font-bold mb-4">Find Your Dream Car</h1>
-                    <p className="text-xl mb-6">Browse our extensive collection of premium vehicles</p>
-                    
-                    {/* Search Input */}
-                    <div className="relative max-w-2xl">
-                        <input
-                            type="text"
-                            className="w-full p-4 pr-12 rounded-lg text-white bg-white/20 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-white placeholder-white/80 border border-white/30"
-                            placeholder="Search cars by make, model, or keyword..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                        <svg
-                            className="absolute right-4 top-4 h-6 w-6 text-white"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            xmlns="http://www.w3.org/2000/svg"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                            />
-                        </svg>
-                    </div>
-                </div>
-
-                {/* Filters */}
-                <div className="bg-white p-6 rounded-xl shadow-sm mb-8">
-                    <h2 className="text-xl font-semibold mb-4 text-gray-800">Refine Your Search</h2>
-                    <div className="flex flex-wrap gap-4">
-                        {/* Category Filter */}
-                        <div className="flex-1 min-w-[200px]">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
-                            <select
-                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                value={category}
-                                onChange={(e) => setCategory(e.target.value)}
-                            >
-                                <option value="">All Categories</option>
-                                <option value="SUV">SUV</option>
-                                <option value="Sedan">Sedan</option>
-                                <option value="Pickup">Pickup</option>
-                            </select>
-                        </div>
-
-                        {/* Location Filter */}
-                        <div className="flex-1 min-w-[200px]">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
-                            <select
-                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                value={location}
-                                onChange={(e) => setLocation(e.target.value)}
-                            >
-                                <option value="">All Locations</option>
-                                <option value="New York">New York</option>
-                                <option value="Los Angeles">Los Angeles</option>
-                                <option value="Chicago">Chicago</option>
-                            </select>
-                        </div>
-
-                        {/* Price Range Filter */}
-                        <div className="flex-1 min-w-[200px]">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Price Range</label>
-                            <select
-                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                value={priceRange}
-                                onChange={(e) => setPriceRange(e.target.value)}
-                            >
-                                <option value="">All Prices</option>
-                                <option value="0-30000">Up to $30,000</option>
-                                <option value="30001-60000">$30,001 - $60,000</option>
-                                <option value="60001+">Above $60,000</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Featured Cars */}
-                <section className="mb-12">
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-bold text-gray-800">Featured Cars</h2>
-                        <p className="text-gray-600">{filteredProducts.length} cars available</p>
-                    </div>
-                    
-                    {filteredProducts.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                            {filteredProducts.map((product) => (
-                                <ProductCard key={product.id} product={product} />
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="bg-white p-8 rounded-xl shadow-sm text-center">
-                            <svg
-                                className="mx-auto h-12 w-12 text-gray-400"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                                xmlns="http://www.w3.org/2000/svg"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={1}
-                                    d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                                />
-                            </svg>
-                            <h3 className="mt-4 text-lg font-medium text-gray-900">No cars found</h3>
-                            <p className="mt-2 text-gray-600">Try adjusting your search or filter criteria</p>
-                        </div>
-                    )}
-                </section>
-            </div>
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <Header />
+      <div className="container mx-auto px-4 py-8">
+        {/* Hero Section */}
+        <div className="mb-12 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl p-8 text-white">
+          <h1 className="text-4xl font-bold mb-4">Find Your Dream Car</h1>
+          <p className="text-xl mb-6">Browse our extensive collection of premium vehicles</p>
+          
+          <div className="flex flex-col sm:flex-row gap-4">
+            <Link 
+              to="/products"
+              className="inline-block bg-white text-blue-600 px-6 py-3 rounded-lg font-medium hover:bg-gray-100 transition-colors text-center"
+            >
+              Browse All Vehicles
+            </Link>
+            <Link 
+              to="/products?category=SUV"
+              className="inline-block bg-white/20 text-white px-6 py-3 rounded-lg font-medium hover:bg-white/30 transition-colors text-center border border-white"
+            >
+              Explore SUVs
+            </Link>
+          </div>
         </div>
-    );
+
+        {/* Featured Cars Section */}
+        <section className="mb-12">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold text-gray-800">Featured Vehicles</h2>
+            <Link 
+              to="/products" 
+              className="text-blue-600 hover:text-blue-800 font-medium"
+            >
+              View all →
+            </Link>
+          </div>
+
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {[...Array(4)].map((_, index) => (
+                <div key={index} className="bg-white rounded-xl shadow-sm p-4 animate-pulse">
+                  <div className="bg-gray-200 h-48 rounded-lg mb-4"></div>
+                  <div className="bg-gray-200 h-4 rounded w-3/4 mb-2"></div>
+                  <div className="bg-gray-200 h-4 rounded w-1/2"></div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {featuredProducts.map((product) => (
+                <ProductCard 
+                  key={product.id} 
+                  product={product} 
+                  className="hover:scale-105 transition-transform duration-300"
+                />
+              ))}
+            </div>
+          )}
+        </section>
+
+        {/* Popular Categories */}
+        <section className="mb-12">
+          <h2 className="text-2xl font-bold text-gray-800 mb-6">Popular Categories</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {[
+              { name: 'SUV', count: mockProducts.filter(p => p.category === 'SUV').length },
+              { name: 'Sedan', count: mockProducts.filter(p => p.category === 'Sedan').length },
+              { name: 'Pickup', count: mockProducts.filter(p => p.category === 'Pickup').length }
+            ].map((category) => (
+              <Link 
+                key={category.name}
+                to={`/products?category=${category.name}`}
+                className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow group"
+              >
+                <div className="flex justify-between items-center">
+                  <h3 className="text-xl font-semibold mb-2 group-hover:text-blue-600 transition-colors">
+                    {category.name}
+                  </h3>
+                  <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                    {category.count} vehicles
+                  </span>
+                </div>
+                <p className="text-gray-600">View all {category.name.toLowerCase()} vehicles</p>
+              </Link>
+            ))}
+          </div>
+        </section>
+      </div>
+    </div>
+  );
 }
+
 export default HomePage;

@@ -67,8 +67,8 @@ function ProductDetails() {
       id: Date.now(), // Unique ID for the message
       productId: product.id,
       sellerName: product.seller,
-      buyerId: currentUser.id, // Assuming `currentUser` has an `id` field
-      buyerName: currentUser.name, // Assuming `currentUser` has a `name` field
+      buyerId: currentUser.id, 
+      buyerName: currentUser.name, 
       productName: product.name,
       content: newMessage,
       sender: isBuyer ? "buyer" : "seller",

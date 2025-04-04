@@ -20,6 +20,8 @@ import Messages from "./pages/seller/Messages";
 import Login from "./components/Login";
 import { useAuth } from "./context/AuthContext";
 import Header from "./components/Header";
+import ProductListingPage from "./pages/ProductListing";
+import Register from "./components/Register";
 
 
 
@@ -46,8 +48,10 @@ function AuthWarapper(){
   const {currentUser, isSeller, isBuyer} = useAuth();
   return (
   <Routes>
+    <Route path="/register" element={<Register/>}/>
     <Route path="/login" element={<Login/>}/>
     <Route path="/" element={<HomePage/>}/>
+    <Route path="/products" element={<ProductListingPage />} />
     <Route path="/about" element={<AboutPage/>}/>
     <Route path="/contact" element={<ContactPage/>}/>
     <Route path="/product/:id" element={<ProductDetails/>}/>
