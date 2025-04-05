@@ -102,9 +102,9 @@ const ProductCard = ({ product }) => {
                     <span className="text-sm text-gray-500">{product.location}</span>
                 </div>
                 <p className="text-xl font-bold text-blue-600 mb-4">
-                    {new Intl.NumberFormat("en-US", {
+                    {new Intl.NumberFormat("en-ET", {
                         style: "currency",
-                        currency: "USD",
+                        currency: "ETB",
                         maximumFractionDigits: 0,
                     }).format(product.price)}
                 </p>

@@ -108,6 +108,7 @@ function AboutPage() {
             "Naod Wubshet",
             "Nebil Bulad",
             "Natnael Amde",
+            "Leul Temechegn"
           ].map((member, index) => (
             <li key={index} className="mb-2">
               {member}

@@ -27,7 +27,7 @@ import Register from "./components/Register";
 
 function App() {
   useEffect(() => {
-
+    
     initializeMockData(); 
   }, []);
   return (

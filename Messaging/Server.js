@@ -2,75 +2,53 @@ import WebSocket, { WebSocketServer } from "ws";
 import express from "express";
 
 const app = express();
-
-const clients = {};
+const PORT = 8080;
 
 const wss = new WebSocketServer({ noServer: true });
+const activeConnections = new Map();
 
-wss.on("connection", (ws) => {
-  ws.on("message", (message) => {
-    const parsedMessage = JSON.parse(message);
+wss.on("connection", (ws, req) => {
+  const userId = req.url.split('?')[1]; // Get user ID from query params
+  console.log(`New connection from user: ${userId}`);
+  
+  // Store connection
+  activeConnections.set(userId, ws);
 
-    console.log(`Received message: `, parsedMessage);
-    const { productId, buyerId, sender, content } = parsedMessage;
+  ws.on('message', (message) => {
+    try {
+      const parsedMessage = JSON.parse(message);
+      console.log('Received message:', parsedMessage);
 
-    const key = `${buyerId}_${productId}`;
-    if (!clients[key]) {
-      clients[key] = { buyer: null, seller: null };
-    }
-
-    if (sender === "seller") {
-      clients[key].seller = ws;
-      console.log(`Seller connected for key ${key}`);
-    } else if (sender === "buyer") {
-      clients[key].buyer = ws;
-      console.log(`Buyer connected for key ${key}`);
-    }
-
-    // Forward message from buyer to seller
-    if (sender === "buyer" && clients[key].seller) {
-      const response = {
-        productId,
-        buyerId,
-        sender: "buyer",
-        content,
-        createdAt: new Date().toISOString(),
-      };
-
-      console.log("Forwarding message to seller:", response);
-      clients[key].seller.send(JSON.stringify(response));
-    }
-
-    // Forward message from seller to buyer
-    if (sender === "seller" && clients[key].buyer) {
-      const response = {
-        productId,
-        buyerId,
-        sender: "seller",
-        content,
-        createdAt: new Date().toISOString(),
-      };
-
-      console.log("Forwarding message to buyer:", response);
-      clients[key].buyer.send(JSON.stringify(response));
+      // Determine recipient type (seller or buyer)
+      const recipientId = parsedMessage.recipientId;
+      
+      if (activeConnections.has(recipientId)) {
+        activeConnections.get(recipientId).send(JSON.stringify(parsedMessage));
+        console.log(`Message forwarded to ${recipientId}`);
+      } else {
+        console.log(`Recipient ${recipientId} not connected`);
+      }
+    } catch (error) {
+      console.error('Error processing message:', error);
     }
   });
 
-  ws.on("close", () => {
-    console.log("WebSocket connection closed");
+  ws.on('close', () => {
+    console.log(`Connection closed for user: ${userId}`);
+    activeConnections.delete(userId);
   });
 
-  ws.on("error", (error) => {
-    console.error("WebSocket error:", error);
+  ws.on('error', (error) => {
+    console.error(`WebSocket error for user ${userId}:`, error);
   });
 });
 
-const server = app.listen(8080, () => {
-  console.log("Server is running on port 8080");
+const server = app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
 
-server.on("upgrade", (request, socket, head) => {
+server.on('upgrade', (request, socket, head) => {
   wss.handleUpgrade(request, socket, head, (ws) => {
-    wss.emit("connection", ws, request);
+    wss.emit('connection', ws, request);
   });
 });

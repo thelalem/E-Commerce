@@ -12,35 +12,50 @@ function ProductDetails() {
   const [newMessage, setNewMessage] = useState("");
   const socketRef = useRef();
   const messagesEndRef = useRef(null);
- 
 
   const product = mockProducts.find((p) => p.id === parseInt(id));
-  
-  useEffect(() => {
-    if(!product) return;
-    const storedMessages = JSON.parse(localStorage.getItem(`messages_${product.id}`)) || [];
-    setMessages(storedMessages);
 
-    socketRef.current = new WebSocket("ws://localhost:8080");
+  // Initialize WebSocket and load messages
+  useEffect(() => {
+    if (!product) return;
+
+    // Load existing messages from localStorage
+    const loadMessages = () => {
+      const messageKey = `messages_${product.id}`;
+      const storedMessages = JSON.parse(localStorage.getItem(messageKey)) || [];
+      setMessages(storedMessages);
+    };
+
+    loadMessages();
+
+    // Initialize WebSocket connection with user ID in query params
+    const userId = currentUser?.id || 'anonymous';
+    socketRef.current = new WebSocket(`ws://localhost:8080?userId=${userId}&productId=${product.id}`);
+
     socketRef.current.onopen = () => {
       console.log("WebSocket connection established");
     };
+
     socketRef.current.onerror = (error) => {
       console.error("WebSocket error:", error);
-    }
+    };
+
     socketRef.current.onmessage = (event) => {
-      console.log("Received from WebSocket:", event.data); // Log raw message
-    
       try {
         const incomingMessage = JSON.parse(event.data);
-        console.log("Parsed message:", incomingMessage); // Log parsed message
-    
+        console.log("Received message:", incomingMessage);
+
+        // Only process messages for this product
         if (incomingMessage.productId === product.id) {
-            setMessages((prevMessages) => {
-              const updatedMessages = [...prevMessages, incomingMessage];
-              localStorage.setItem(`messages_${product.id}`, JSON.stringify(updatedMessages));
-              return updatedMessages;
-            });
+          setMessages((prevMessages) => {
+            const updatedMessages = [...prevMessages, incomingMessage];
+            
+            // Store in localStorage with product ID as key
+            const messageKey = `messages_${product.id}`;
+            localStorage.setItem(messageKey, JSON.stringify(updatedMessages));
+            
+            return updatedMessages;
+          });
         }
       } catch (error) {
         console.error("Error parsing WebSocket message:", error);
@@ -52,47 +67,54 @@ function ProductDetails() {
         socketRef.current.close();
       }
     };
-  }, [product,isBuyer]);
+  }, [product, currentUser]);
 
-
+  // Auto-scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
   const sendMessage = (e) => {
     e.preventDefault();
-    if (!newMessage.trim()) return;
-    
+    if (!newMessage.trim() || !currentUser) return;
+
     const message = {
-      id: Date.now(), // Unique ID for the message
+      id: Date.now(),
       productId: product.id,
-      sellerName: product.seller,
-      buyerId: currentUser.id, 
-      buyerName: currentUser.name, 
       productName: product.name,
+      senderId: currentUser.id,
+      senderName: currentUser.name,
+      senderType: isBuyer ? "buyer" : "seller",
+      recipientId: isBuyer ? product.sellerID : null, // Assuming product has sellerId
       content: newMessage,
-      sender: isBuyer ? "buyer" : "seller",
-      reply: null,
       createdAt: new Date().toISOString(),
-      repliedAt: null,
     };
 
-    console.log("Sending message to:", message);
-    const messageKey = `messages_${currentUser.id}_${product.id}`;
+    console.log("Sending message:", message);
 
-    const updatedMessages = [...messages, message];
-    localStorage.setItem(messageKey, JSON.stringify(updatedMessages));
-
-    if (socketRef.current.readyState === WebSocket.OPEN) {
+    // Send via WebSocket if connection is open
+    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
       socketRef.current.send(JSON.stringify(message));
+    } else {
+      console.error("WebSocket connection not open");
     }
-    setMessages(updatedMessages);
+
+    // Update local state immediately
+    setMessages((prevMessages) => {
+      const updatedMessages = [...prevMessages, message];
+      
+      // Store in localStorage
+      const messageKey = `messages_${product.id}`;
+      localStorage.setItem(messageKey, JSON.stringify(updatedMessages));
+      
+      return updatedMessages;
+    });
+
     setNewMessage("");
   };
 
-
   const toggleChat = () => {
-    if(!currentUser){
+    if (!currentUser) {
       navigate("/login");
       return;
     }
@@ -176,10 +198,10 @@ function ProductDetails() {
                   <p className="text-base md:text-lg text-gray-500 mt-1">{product.location}</p>
                 </div>
                 <span className="text-xl md:text-2xl font-bold text-blue-600">
-                  {new Intl.NumberFormat("en-US", { 
-                    style: "currency", 
-                    currency: "USD",
-                    maximumFractionDigits: 0
+                  {new Intl.NumberFormat("en-ET", {
+                    style: "currency",
+                    currency: "ETB",
+                    maximumFractionDigits: 0,
                   }).format(product.price)}
                 </span>
               </div>
@@ -205,8 +227,7 @@ function ProductDetails() {
           </div>
         </div>
 
-        {/* Chat Section  */}
-        
+        {/* Chat Section */}
         <div className="bg-white rounded-xl shadow-md overflow-hidden">
           <button 
             onClick={toggleChat}
@@ -247,25 +268,24 @@ function ProductDetails() {
                     <div
                       key={index}
                       className={`flex mb-3 ${
-                        msg.sender === "buyer" ? "justify-end" : "justify-start"
+                        msg.senderType === "buyer" ? "justify-end" : "justify-start"
                       }`}
                     >
                       <div
                         className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                          msg.sender === "buyer"
+                          msg.senderType === "buyer"
                             ? "bg-blue-600 text-white rounded-br-none"
                             : "bg-gray-200 text-gray-800 rounded-bl-none"
                         }`}
                       >
                         <p>{msg.content}</p>
                         <p className={`text-xs mt-1 ${
-                          msg.sender === "buyer" ? "text-blue-100" : "text-gray-500"
+                          msg.senderType === "buyer" ? "text-blue-100" : "text-gray-500"
                         }`}>
                           {msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString([], {
                             hour: '2-digit',
                             minute: '2-digit'
                           }) : "Invalid Date"}
-
                         </p>
                       </div>
                     </div>
@@ -274,9 +294,7 @@ function ProductDetails() {
                 <div ref={messagesEndRef} />
               </div>
 
-              <div
-                className="border-t border-gray-200 bg-white flex p-4"
-              >
+              <div className="border-t border-gray-200 bg-white flex p-4">
                 <input
                   type="text"
                   value={newMessage}

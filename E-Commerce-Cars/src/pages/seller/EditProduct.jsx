@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 
 const EditProduct = () => {
   const { id } = useParams();
-  const { currentSeller } = useAuth();
+  const { currentUser } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: '',
@@ -22,7 +22,12 @@ const EditProduct = () => {
     const products = JSON.parse(localStorage.getItem('products') || '[]');
     const productToEdit = products.find(p => p.id === parseInt(id));
 
-    if (productToEdit && productToEdit.seller === currentSeller?.name) {
+    console.log('Products:', products); // Log all products
+    console.log('Product to Edit:', productToEdit); // Log the product being edited
+    console.log('Current Seller:', currentUser); // Log the current seller
+    console.log('Current Seller Name:', currentUser.name); // Log the seller's name
+
+    if (productToEdit && productToEdit.seller === currentUser.name) {
       setFormData({
         name: productToEdit.name,
         description: productToEdit.description,
@@ -31,9 +36,10 @@ const EditProduct = () => {
         previewImage: productToEdit.image || ''
       });
     } else {
+      console.log('Redirecting to dashboard: Product not found or unauthorized'); // Log redirection reason
       navigate('/seller/dashboard');
     }
-  }, [id, currentSeller, navigate]);
+  }, [id, currentUser, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -89,7 +95,7 @@ const EditProduct = () => {
           ...product,
           name: formData.name,
           description: formData.description,
-          price: `$${parseFloat(formData.price).toFixed(2)}`,
+          price: formData.price,
           category: formData.category,
           image: formData.previewImage || product.image
         };
@@ -144,7 +150,7 @@ const EditProduct = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label htmlFor="price" className="block text-sm font-medium text-gray-700">
-              Price ($)
+              Price (ETB)
             </label>
             <input
               type="number"

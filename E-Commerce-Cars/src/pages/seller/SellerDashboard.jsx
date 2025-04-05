@@ -9,49 +9,36 @@ const SellerDashboard = () => {
   const [stats,setStats] = useState({
     totalProducts: 0,
     totalRevenue: 0,
-    topCategory: '',
-  })
+  });
   const [deleteModal, setDeleteModal] = useState({
     isOpen: false,
     productId: null,
     productName: ''
   });
+
   useEffect(() => {
     console.log('Logged-in user in SellerDashboard:', currentUser);
   }, [currentUser]);
+
   useEffect(() => {
-    // Mock API call to fetch seller's products
     const fetchProducts = () => {
       try {
-        // In a real app, this would be an API call filtered by seller ID
         const mockProducts = JSON.parse(localStorage.getItem('products') || '[]');
-        console.log("Mock Products",mockProducts);
         const sellerProducts = mockProducts.filter(product => product.seller === currentUser?.name);
 
-      console.log('Filtered Products:', sellerProducts);
         setProducts(sellerProducts);
 
-         // Calculate dashboard stats
-         const totalValue = sellerProducts.reduce((sum, product) => {
+        const totalValue = sellerProducts.reduce((sum, product) => {
           const price = parseFloat(product.price.replace(/[^0-9.]/g, ''));
           return sum + price;
         }, 0);
-        
-        const categoryCounts = sellerProducts.reduce((counts, product) => {
-          counts[product.category] = (counts[product.category] || 0) + 1;
-          return counts;
-        }, {});
-        
-        const mostPopularCategory = Object.keys(categoryCounts).reduce((a, b) => 
-          categoryCounts[a] > categoryCounts[b] ? a : b, '');
-        
+
         setStats({
           totalProducts: sellerProducts.length,
           totalValue: totalValue.toLocaleString('en-US', {
             style: 'currency',
-            currency: 'USD'
+            currency: 'ETB',
           }),
-          topCategory:mostPopularCategory
         });
 
       } catch (error) {
@@ -60,32 +47,11 @@ const SellerDashboard = () => {
         setLoading(false);
       }
     };
+
     if (currentUser) {
       fetchProducts();
     }
   }, [currentUser]);
-
-  useEffect(() => {
-    const fetchMessages = () => {
-      try {
-        const allKeys = Object.keys(localStorage);
-        let allMessages = [];
-
-        allKeys.forEach((key) => {
-          if (key.startsWith("messages_")) {
-            const productMessages = JSON.parse(localStorage.getItem(key)) || [];
-            allMessages = [...allMessages, ...productMessages];
-          }
-        });
-
-        console.log("Fetched messages for dashboard:", allMessages);
-      } catch (error) {
-        console.error("Error fetching messages for dashboard:", error);
-      }
-    };
-
-    fetchMessages();
-  }, []);
 
   const handleDelete = (productId) => {
     const productToDelete = products.find(p => p.id === productId);
@@ -106,43 +72,23 @@ const SellerDashboard = () => {
     
     setDeleteModal({ isOpen: false, productId: null, productName: '' });
   };
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+
+  if (loading) return <div>Loading...</div>;
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold">Your Dashboard</h2>
-        <Link to="/seller/messages"
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-        >
-          View Meessages
-        </Link>
-        <Link
-          to="/seller/add-product"
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-        >
-          Add New Product
-        </Link>
-      </div>
-
-
       {/* Dashboard Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div className="bg-white p-6 rounded-lg shadow">
           <h3 className="text-lg font-medium text-gray-500">Total Products</h3>
           <p className="text-3xl font-bold">{stats.totalProducts}</p>
         </div>
-        <div className="bg-white p-6 rounded-lg shadow">
+        <div className="bg-white p-8 rounded-lg shadow">
           <h3 className="text-lg font-medium text-gray-500">Total Inventory Value</h3>
-          <p className="text-3xl font-bold">{stats.totalValue}</p>
-        </div>
-        <div className="bg-white p-6 rounded-lg shadow">
-          <h3 className="text-lg font-medium text-gray-500">Top Category</h3>
-          <p className="text-3xl font-bold">{stats.mostPopularCategory || 'N/A'}</p>
+          <p className="text-4xl font-bold">{stats.totalValue}</p>
         </div>
       </div>
+
       {/* Products List Section */}
       <div className="mb-6">
         <h3 className="text-xl font-semibold mb-4">Your Products</h3>
@@ -153,66 +99,72 @@ const SellerDashboard = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {products.map((product) => (
-            <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden">
-              <div className="h-48 bg-gray-200 overflow-hidden">
-                {product.image && (
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-full h-full object-cover"
-                  />
-                )}
-              </div>
-              <div className="p-4">
-                <h3 className="text-lg font-semibold">{product.name}</h3>
-                <p className="text-gray-600">${product.price}</p>
-                <p className="text-sm text-gray-500 mt-2">{product.category}</p>
-                <div className="mt-4 flex space-x-2">
-                  <Link
-                    to={`/seller/edit-product/${product.id}`}
-                    className="px-3 py-1 bg-yellow-500 text-white rounded-md text-sm hover:bg-yellow-600"
-                  >
-                    Edit
-                  </Link>
-                  <button
-                    onClick={() => handleDelete(product.id)}
-                    className="px-3 py-1 bg-red-500 text-white rounded-md text-sm hover:bg-red-600"
-                  >
-                    Delete
-                  </button>
-              
+              <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden">
+                <div className="h-48 bg-gray-200 overflow-hidden">
+                  {product.image && (
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+                </div>
+                <div className="p-4">
+                  <h3 className="text-lg font-semibold">{product.name}</h3>
+                  <p className="text-gray-600">
+                    {new Intl.NumberFormat('en-US', {
+                      style: 'currency',
+                      currency: 'ETB',
+                      maximumFractionDigits: 0,
+                    }).format(product.price)}
+                  </p>
+                  <p className="text-sm text-gray-500 mt-2">{product.category}</p>
+                  <div className="mt-4 flex space-x-2">
+                    <Link
+                      to={`/seller/edit-product/${product.id}`}
+                      className="px-3 py-1 bg-yellow-500 text-white rounded-md text-sm hover:bg-yellow-600"
+                    >
+                      Edit
+                    </Link>
+                    <button
+                      onClick={() => handleDelete(product.id)}
+                      className="px-3 py-1 bg-red-500 text-white rounded-md text-sm hover:bg-red-600"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {deleteModal.isOpen && (
+        <div className="fixed inset-0 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-white p-6 rounded-lg max-w-md w-full">
+            <h3 className="text-lg font-bold mb-4">Confirm Delete</h3>
+            <p className="mb-6">
+              Are you sure you want to delete "{deleteModal.productName}"? This action cannot be undone.
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => setDeleteModal({ isOpen: false, productId: null, productName: '' })}
+                className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+              >
+                Delete
+              </button>
             </div>
-          ))}
+          </div>
         </div>
       )}
     </div>
-    {deleteModal.isOpen && (
-  <div className="fixed inset-0 backdrop-blur-sm  flex items-center justify-center p-4 z-50">
-    <div className="bg-white p-6 rounded-lg max-w-md w-full">
-      <h3 className="text-lg font-bold mb-4">Confirm Delete</h3>
-      <p className="mb-6">
-        Are you sure you want to delete "{deleteModal.productName}"? This action cannot be undone.
-      </p>
-      <div className="flex justify-end space-x-4">
-        <button
-          onClick={() => setDeleteModal({ isOpen: false, productId: null, productName: '' })}
-          className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
-        >
-          Cancel
-        </button>
-        <button
-          onClick={confirmDelete}
-          className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-        >
-          Delete
-        </button>
-      </div>
-    </div>
-  </div>
-)}
-  </div>
   );
 };
 

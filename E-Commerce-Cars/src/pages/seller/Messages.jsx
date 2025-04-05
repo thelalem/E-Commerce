@@ -1,161 +1,165 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
 
 const Messages = () => {
-  const { currentSeller } = useAuth();
+  const { currentUser } = useAuth(); 
   const [messages, setMessages] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [replyContent, setReplyContent] = useState({});
-
-
-  const fetchMessages = () => {
-    try {
-      const allKeys = Object.keys(localStorage);
-      let allMessages = [];
-
-      // Iterate over all keys in localStorage
-      allKeys.forEach((key) => {
-        if (key.startsWith("messages_")) {
-          const [_, buyerId, productId] = key.split("_"); // Extract buyerId and productId
-          const productMessages = JSON.parse(localStorage.getItem(key)) || [];
-
-          // Filter messages for the seller's products
-          const sellerMessages = productMessages.filter(
-            (msg) => msg.sellerName === currentSeller?.name
-          );
-
-          allMessages = [...allMessages, ...sellerMessages];
-        }
-      });
-
-      setMessages(allMessages);
-      console.log("Fetched messages for all products:", allMessages);
-    } catch (error) {
-      console.error("Error fetching messages:", error);
-      setMessages([]); // Fallback to an empty array
-    } finally {
-      setLoading(false);
-    }
-  };
+  const [replyContentMap, setReplyContentMap] = useState({});
+  const socketRef = useRef();
 
   useEffect(() => {
-    console.log("Messages state updated:", messages); // Debugging log
-  }, [messages]);
+    const fetchMessages = () => {
+      try {
+        const allKeys = Object.keys(localStorage);
+        let allMessages = [];
 
-  useEffect(() => {
-    console.log("Messages state updated:", messages); // Debugging log
-  }, [messages]);
+        allKeys.forEach((key) => {
+          if (key.startsWith("messages_")) {
+            const stored = JSON.parse(localStorage.getItem(key));
+            if (Array.isArray(stored)) {
+              allMessages.push(...stored);
+            }
+          }
+        });
 
-  useEffect(() => {
+        const userMessages = allMessages.filter(
+          msg => msg.recipientId === currentUser?.id || msg.senderId === currentUser?.id
+        );
+
+        setMessages(userMessages);
+      } catch (err) {
+        console.error("Failed to load messages:", err);
+      }
+    };
+
     fetchMessages();
-  }, [currentSeller]);
+  }, [currentUser]);
 
   useEffect(() => {
-    const socket = new WebSocket("ws://localhost:8080");
+    if (!currentUser) return;
 
-    socket.onopen = () => {
-      console.log("WebSocket connection established for SellerDashboard");
+    const socketUrl = `ws://localhost:8080?${currentUser.id}`;
+    socketRef.current = new WebSocket(socketUrl);
+
+    socketRef.current.onopen = () => {
+      console.log("WebSocket connected");
     };
 
-    socket.onerror = (error) => {
-      console.error("WebSocket error:", error);
-    };
+    socketRef.current.onmessage = (event) => {
+      try {
+        const newMessage = JSON.parse(event.data);
+        console.log("Incoming message:", newMessage);
 
-    socket.onmessage = (event) => {
-      const message = JSON.parse(event.data);
-      console.log("Received message on SellerDashboard:", message);
+        if (newMessage.recipientId === currentUser.id) {
+          setMessages(prev => [...prev, newMessage]);
 
-      setMessages((prevMessages) => [...prevMessages, message]);
-    };
-
-    socket.onclose = (event) => {
-      console.log("WebSocket connection closed for SellerDashboard:", event);
-    };
-
-  }, []);
-
-  const handleReply = (messageId, replyContent) => {
-    // Update messages with reply
-    const updatedMessages = messages.map(msg => {
-      if (msg.id === messageId) {
-        return { ...msg, reply: replyContent, repliedAt: new Date().toISOString() };
+          const key = `messages_${newMessage.productId}`;
+          const existing = JSON.parse(localStorage.getItem(key)) || [];
+          localStorage.setItem(key, JSON.stringify([...existing, newMessage]));
+        }
+      } catch (err) {
+        console.error("Error processing WebSocket message:", err);
       }
-      return msg;
-    });
+    };
 
-    setMessages(updatedMessages);
-    
-    // Update localStorage
-    const allMessages = JSON.parse(localStorage.getItem('messages') || []);
-    const updatedAllMessages = allMessages.map(msg => {
-      if (msg.id === messageId) {
-        return { ...msg, reply: replyContent, repliedAt: new Date().toISOString() };
-      }
-      return msg;
-    });
+    socketRef.current.onclose = () => {
+      console.log("WebSocket closed");
+    };
 
-    localStorage.setItem('messages', JSON.stringify(updatedAllMessages));
+    return () => socketRef.current?.close();
+  }, [currentUser]);
+
+  const handleReply = (productId, recipientId, key) => {
+    const replyContent = replyContentMap[key];
+    if (!replyContent?.trim()) return;
+
+    const reply = {
+      id: Date.now(),
+      productId,
+      content: replyContent,
+      senderId: currentUser.id,
+      senderName: currentUser.name,
+      senderType: "seller",
+      recipientId,
+      createdAt: new Date().toISOString()
+    };
+
+    if (socketRef.current?.readyState === WebSocket.OPEN) {
+      socketRef.current.send(JSON.stringify(reply));
+    }
+
+    setMessages(prev => [...prev, reply]);
+    setReplyContentMap(prev => ({ ...prev, [key]: '' }));
+
+    const storageKey = `messages_${productId}`;
+    const existing = JSON.parse(localStorage.getItem(storageKey)) || [];
+    localStorage.setItem(storageKey, JSON.stringify([...existing, reply]));
   };
 
-  if (loading) {
-    return <div>Loading...</div>;
-  }
+  // Group messages by senderId and productId
+  const groupedConversations = messages.reduce((groups, msg) => {
+    const otherPartyId = msg.senderId === currentUser.id ? msg.recipientId : msg.senderId;
+    const key = `${otherPartyId}_${msg.productId}`;
+    if (!groups[key]) {
+      groups[key] = {
+        productId: msg.productId,
+        productName: msg.productName || `ID: ${msg.productId}`,
+        userId: otherPartyId,
+        userName: msg.senderId === currentUser.id ? msg.recipientName : msg.senderName,
+        messages: []
+      };
+    }
+    groups[key].messages.push(msg);
+    return groups;
+  }, {});
 
   return (
-    <div>
-      <h2 className="text-2xl font-bold mb-6">Messages</h2>
-      
-      {messages.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-lg text-gray-500">You have no messages yet.</p>
-        </div>
+    <div className="container mx-auto p-4">
+      <h1 className="text-2xl font-bold mb-6">Messages</h1>
+
+      {Object.keys(groupedConversations).length === 0 ? (
+        <p className="text-gray-500">No messages yet.</p>
       ) : (
-        <div className="space-y-4">
-          {messages.map((message) => (
-            <div key={message.id} className="bg-white p-4 rounded-lg shadow">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-semibold">{message.productName}</h3>
-                  <p className="text-gray-600">From: {message.buyerName || "Anonymous"}</p>
-                </div>
-                <span className="text-sm text-gray-500">
-                  {new Date(message.createdAt).toLocaleString()}
-                </span>
-              </div>
-
-              <div className="mt-2 p-3 bg-gray-50 rounded">
-                <p>{message.content}</p>
-              </div>
-
-              {message.reply ? (
-                <div className="mt-2 ml-8 p-3 bg-blue-50 rounded">
-                  <p className="font-semibold">Your reply:</p>
-                  <p>{message.reply}</p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    {new Date(message.repliedAt).toLocaleString()}
-                  </p>
-                </div>
-              ) : (
-                <div className="mt-2">
-                  <textarea
-                    placeholder="Type your reply..."
-                    className="w-full p-2 border rounded"
-                    value={replyContent[message.id] || ""}
-                    onChange={(e) =>
-                      setReplyContent({ ...replyContent, [message.id]: e.target.value })
-                    }
-                  />
-                  <button
-                    onClick={() => handleReply(message.id, replyContent[message.id])}
-                    className="mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+        Object.entries(groupedConversations).map(([key, convo]) => (
+          <div key={key} className="mb-8 p-4 bg-white rounded-lg shadow">
+            <h2 className="text-lg font-semibold mb-2">
+              Conversation with {convo.userName} (Product: {convo.productName} )
+            </h2>
+            <div className="space-y-2 max-h-60 overflow-y-auto mb-3 border rounded p-2 bg-gray-50">
+              {convo.messages
+                .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+                .map((msg, idx) => (
+                  <div
+                    key={idx}
+                    className={`p-2 rounded ${
+                      msg.senderId === currentUser.id ? 'bg-blue-100 text-right' : 'bg-gray-200 text-left'
+                    }`}
                   >
-                    Send Reply
-                  </button>
-                </div>
-              )}
+                    <p><strong>{msg.senderName}:</strong> {msg.content}</p>
+                    <small className="text-gray-500">{new Date(msg.createdAt).toLocaleString()}</small>
+                  </div>
+                ))}
             </div>
-          ))}
-        </div>
+
+            <div className="flex gap-2 items-center">
+              <input
+                type="text"
+                className="border px-2 py-1 rounded w-full"
+                placeholder="Type your reply..."
+                value={replyContentMap[key] || ''}
+                onChange={(e) =>
+                  setReplyContentMap(prev => ({ ...prev, [key]: e.target.value }))
+                }
+              />
+              <button
+                className="bg-blue-600 text-white px-3 py-1 rounded"
+                onClick={() => handleReply(convo.productId, convo.userId, key)}
+              >
+                Send
+              </button>
+            </div>
+          </div>
+        ))
       )}
     </div>
   );

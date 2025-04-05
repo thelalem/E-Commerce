@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate, Link } from "react-router-dom";
 
@@ -16,12 +16,19 @@ const Login = () => {
 
   // Mock user data for authentication
   const mockUsers = [
-    { id: 1, name: "John Doe", email: "john.doe@example.com", password: "password123", role: "buyer" },
+    { id: 4, name: "John Doe", email: "john.doe@example.com", password: "password123", role: "buyer" },
     { id: 2, name: "Jane Smith", email: "jane.smith@example.com", password: "securepass456", role: "seller" },
     { id: 3, name: "Alice Johnson", email: "alice.johnson@example.com", password: "mypassword789", role: "buyer" },
-    { id: 4, name: "Auto Dealer", email: "seller@example.com", password: "password123", role: "seller" },
+    { id: 1, name: "Auto Dealer", email: "seller@example.com", password: "password123", role: "seller" },
     { id: 5, name: "Thelalem Arg", email: "thelalemarg@gmail.com", password: "password123", role: "buyer" },
   ];
+
+  useEffect(() => {
+    const storedUsers = JSON.parse(localStorage.getItem("users")) || [];
+    if (storedUsers.length === 0) {
+      localStorage.setItem("users", JSON.stringify(mockUsers));
+    }
+  },[]);
 
   // Handle form submission
   const handleSubmit = (e) => {
@@ -29,7 +36,8 @@ const Login = () => {
     setError(""); // Clear any previous error messages
 
     // Find a user in the mock data that matches the entered email and password
-    const user = mockUsers.find(u => u.email === email && u.password === password);
+    const storedUsers = JSON.parse(localStorage.getItem("users")) || [];
+    const user = storedUsers.find(u => u.email === email && u.password === password);
     if (user) {
       login(user); // Call the login function with the user data
 
