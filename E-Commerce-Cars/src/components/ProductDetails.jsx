@@ -85,7 +85,7 @@ function ProductDetails() {
       senderId: currentUser.id,
       senderName: currentUser.name,
       senderType: isBuyer ? "buyer" : "seller",
-      recipientId: isBuyer ? product.sellerID : null, // Assuming product has sellerId
+      recipientId: isBuyer ? product.sellerID : null,
       content: newMessage,
       createdAt: new Date().toISOString(),
     };

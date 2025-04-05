@@ -16,7 +16,7 @@ export const AuthProvider = ({ children }) => {
     console.log('Current User in AuthContext:', currentUser);
   }, [currentUser]);
   useEffect(() => {
-    // Check if there is a user in localStorage (or sessionStorage)
+    // Check if there is a user in localStorage
     const storedUser = JSON.parse(localStorage.getItem('currentUser'));
     console.log('Stored User in localStorage:', storedUser); // Debugging log
     if (storedUser) {

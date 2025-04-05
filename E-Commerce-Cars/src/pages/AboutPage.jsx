@@ -1,9 +1,12 @@
 import React from 'react';
 import {Link} from "react-router-dom";
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 
 function AboutPage() {
   return (
     <div className="min-h-screen bg-gray-50">
+      <Header />
       {/* Hero Section */}
       <div className="relative bg-gradient-to-r from-blue-800 to-indigo-900 text-white py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto text-center">
@@ -129,6 +132,7 @@ function AboutPage() {
           </Link>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

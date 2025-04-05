@@ -3,6 +3,7 @@ import Header from '../components/Header';
 import { Link } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
 import { mockProducts } from '../utils/mockProducts';
+import Footer from '../components/Footer';
 
 function HomePage() {
   const [featuredProducts, setFeaturedProducts] = useState([]);
@@ -118,6 +119,8 @@ function HomePage() {
           </div>
         </section>
       </div>
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

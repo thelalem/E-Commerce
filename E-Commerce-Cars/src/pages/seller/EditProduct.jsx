@@ -16,16 +16,12 @@ const EditProduct = () => {
   });
   const [errors, setErrors] = useState({});
 
-  const categories = ['SUV', 'Sedan', 'Truck', 'Electric', 'Luxury'];
+  const categories = ['SUV', 'Sedan', 'PickUp'];
 
   useEffect(() => {
     const products = JSON.parse(localStorage.getItem('products') || '[]');
     const productToEdit = products.find(p => p.id === parseInt(id));
 
-    console.log('Products:', products); // Log all products
-    console.log('Product to Edit:', productToEdit); // Log the product being edited
-    console.log('Current Seller:', currentUser); // Log the current seller
-    console.log('Current Seller Name:', currentUser.name); // Log the seller's name
 
     if (productToEdit && productToEdit.seller === currentUser.name) {
       setFormData({

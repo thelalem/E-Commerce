@@ -13,6 +13,7 @@ const Messages = () => {
         const allKeys = Object.keys(localStorage);
         let allMessages = [];
 
+        // Retrieve all messages stored in localStorage
         allKeys.forEach((key) => {
           if (key.startsWith("messages_")) {
             const stored = JSON.parse(localStorage.getItem(key));
@@ -22,6 +23,7 @@ const Messages = () => {
           }
         });
 
+        // Filter messages relevant to the current user
         const userMessages = allMessages.filter(
           msg => msg.recipientId === currentUser?.id || msg.senderId === currentUser?.id
         );
@@ -50,6 +52,7 @@ const Messages = () => {
         const newMessage = JSON.parse(event.data);
         console.log("Incoming message:", newMessage);
 
+        // Add new incoming message to the state and localStorage
         if (newMessage.recipientId === currentUser.id) {
           setMessages(prev => [...prev, newMessage]);
 
@@ -84,10 +87,12 @@ const Messages = () => {
       createdAt: new Date().toISOString()
     };
 
+    // Send the reply via WebSocket if the connection is open
     if (socketRef.current?.readyState === WebSocket.OPEN) {
       socketRef.current.send(JSON.stringify(reply));
     }
 
+    // Update the state and localStorage with the new reply
     setMessages(prev => [...prev, reply]);
     setReplyContentMap(prev => ({ ...prev, [key]: '' }));
 

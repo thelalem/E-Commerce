@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import Header from '../components/Header';
+import Footer from '../components/Footer';
 
 const ContactPage = () => {
   const [formData, setFormData] = useState({
@@ -85,9 +87,12 @@ const ContactPage = () => {
   };
 
   return (
+    <>
+    <Header />
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-2xl mx-auto">
         <div className="text-center mb-12">
+          
           <h1 className="text-4xl font-extrabold text-gray-900 sm:text-5xl mb-4">
             Contact Us
           </h1>
@@ -284,7 +289,7 @@ const ContactPage = () => {
             <p className="text-sm text-gray-600">
               Prefer email? Reach us directly at{' '}
               <a
-                href="mailto:contact@example.com"
+                href="info@autoelite-eth.com"
                 className="font-medium text-indigo-600 hover:text-indigo-500"
               >
                 contact@example.com
@@ -294,6 +299,8 @@ const ContactPage = () => {
         </div>
       </div>
     </div>
+    <Footer />
+    </>
   );
 };
 
