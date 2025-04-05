@@ -34,16 +34,19 @@ The platform is scoped to vehicles, including categories such as SUVs, Sedans, a
     npm or yarn package manager
 
     Steps
-    2.1 Clone the Repository: - git clone https://github.com/thelalem/E-Commerce.git - cd E-Commerce-Cars
+    2.1 Clone the Repository: - git clone https://github.com/thelalem/E-Commerce.git
+    Navigate to the folder - cd E-Commerce-Cars
 
-        2.2 Install Dependencies
-        -npm install
+    2.2 Install Dependencies
+    -npm install
 
-        2.3 Run the development Server
-        - npm run dev
+    2.3 Run the development Server
 
-        2.4 Open the Application
-        - open your browser and navigate to  http://localhost:5173
+    -npm run dev
+
+    2.4 Open the Application
+
+    - open your browser and navigate to http://localhost:5173
 
 3.  Description of How ES6+ Features Were Utilized
     The project leverages modern JavaScript (ES6+) features to enhance code readability, maintainability, and performance. Below are some examples:
