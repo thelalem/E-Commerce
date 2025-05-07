@@ -292,7 +292,7 @@ const ContactPage = () => {
                 href="info@autoelite-eth.com"
                 className="font-medium text-indigo-600 hover:text-indigo-500"
               >
-                contact@example.com
+                info@autoelite-eth.com
               </a>
             </p>
           </div>

@@ -1,0 +1,290 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "E-Commerce Cars API",
+    "version": "1.0.0",
+    "description": "API documentation for the E-Commerce Cars platform"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000/api",
+      "description": "Development Server"
+    }
+  ],
+  "paths": {
+    "/products": {
+      "get": {
+        "summary": "Get all products",
+        "tags": ["Products"],
+        "responses": {
+          "200": {
+            "description": "List of all products",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Product"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/products/{id}": {
+      "get": {
+        "summary": "Get a product by ID",
+        "tags": ["Products"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "The product ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The product details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Product not found"
+          }
+        }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "summary": "Register a new user",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User registered successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RegisterResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Validation failed"
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "Login a user",
+        "tags": ["Authentication"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Invalid credentials"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Product": {
+        "type": "object",
+        "required": ["name", "description", "price", "category", "location", "imageUrl", "stock"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The auto-generated ID of the product"
+          },
+          "name": {
+            "type": "string",
+            "description": "The name of the product"
+          },
+          "description": {
+            "type": "string",
+            "description": "The description of the product"
+          },
+          "price": {
+            "type": "number",
+            "description": "The price of the product"
+          },
+          "category": {
+            "type": "string",
+            "description": "The category of the product (e.g., SUV, Sedan, Pickup)"
+          },
+          "location": {
+            "type": "string",
+            "description": "The location of the product"
+          },
+          "imageUrl": {
+            "type": "string",
+            "description": "The URL of the product image"
+          },
+          "stock": {
+            "type": "number",
+            "description": "The stock quantity of the product"
+          }
+        },
+        "example": {
+          "id": "12345",
+          "name": "Tesla Model X",
+          "description": "A luxury electric SUV",
+          "price": 80000,
+          "category": "SUV",
+          "location": "California",
+          "imageUrl": "http://example.com/image.jpg",
+          "stock": 10
+        }
+      },
+      "LoginRequest": {
+        "type": "object",
+        "required": ["email", "password"],
+        "properties": {
+          "email": {
+            "type": "string",
+            "description": "The user's email address"
+          },
+          "password": {
+            "type": "string",
+            "description": "The user's password"
+          }
+        },
+        "example": {
+          "email": "user@example.com",
+          "password": "password123"
+        }
+      },
+      "LoginResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "A success message"
+          },
+          "token": {
+            "type": "string",
+            "description": "The JWT token for authentication"
+          }
+        },
+        "example": {
+          "message": "Login successful",
+          "token": "your-jwt-token-here"
+        }
+      },
+      "RegisterRequest": {
+        "type": "object",
+        "required": ["name", "email", "password", "role"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The user's name"
+          },
+          "email": {
+            "type": "string",
+            "description": "The user's email address"
+          },
+          "password": {
+            "type": "string",
+            "description": "The user's password"
+          },
+          "role": {
+            "type": "string",
+            "description": "The user's role (e.g., buyer or seller)"
+          }
+        },
+        "example": {
+          "name": "John Doe",
+          "email": "john.doe@example.com",
+          "password": "password123",
+          "role": "buyer"
+        }
+      },
+      "RegisterResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "A success message"
+          },
+          "user": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "The auto-generated ID of the user"
+              },
+              "name": {
+                "type": "string",
+                "description": "The user's name"
+              },
+              "email": {
+                "type": "string",
+                "description": "The user's email address"
+              },
+              "role": {
+                "type": "string",
+                "description": "The user's role"
+              },
+              "createdAt": {
+                "type": "string",
+                "description": "The timestamp when the user was created"
+              }
+            }
+          }
+        },
+        "example": {
+          "message": "User registered successfully",
+          "user": {
+            "id": "12345",
+            "name": "John Doe",
+            "email": "john.doe@example.com",
+            "role": "buyer",
+            "createdAt": "2025-05-07T12:00:00.000Z"
+          }
+        }
+      }
+    }
+  }
+}
