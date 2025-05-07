@@ -1,8 +1,14 @@
 export const authorizeRoles = (...roles) => {
     return (req, res, next) => {
-        if (!roles.includes(req.user.role)) {
-            return res.status(403).json({ message: "Not authorized to access this route" });
+        try {
+            if (!roles.includes(req.user.role)) {
+                const error = new Error(`Role: ${req.user.role} is not allowed to access this resource`);
+                error.statusCode = 403; // Forbidden
+                return
+            }
+            next();
+        } catch (error) {
+            next(error);
         }
-        next();
     }
-};
+}   

@@ -27,7 +27,11 @@ export const validateCreateUser = (req, res, next) => {
 
     // If there are validation errors, return a 400 response
     if (errors.length > 0) {
-        return res.status(400).json({ message: 'Validation failed', errors });
+
+        const error = new Error('Validation failed');
+        error.statusCode = 400; // Bad Request
+        error.errors = errors;
+        return next(error);
     }
 
     next();

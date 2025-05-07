@@ -8,6 +8,7 @@ import swaggerUi from 'swagger-ui-express';
 import swaggerDocument from './docs/api-docs.json' with { type: 'json' };
 import dotenv from 'dotenv';
 import { createClient } from 'redis';
+import { errorHandler } from './middlewares/error.middleware.js';
 
 import connectDB from './config/db.js';
 import redisClient from './config/redis.js';
@@ -19,7 +20,6 @@ import productRoutes from './routes/product.routes.js';
 import orderRoutes from './routes/order.routes.js';
 // import semanticRoutes from './routes/semantic.routes.js';
 
-// import { errorHandler } from './middlewares/error.middleware.js';
 
 
 dotenv.config();
@@ -65,12 +65,19 @@ app.use('/api/orders', orderRoutes);
 // app.use('/api/semantic', semanticRoutes);
 
 
+app.all('/*splat', (req, res, next) => {
+    const error = new Error(`Cannot find ${req.originalUrl} on this server`);
+    error.statusCode = 404;
+    next(error);
+});
+
 
 app.get('/', (req, res) => {
     res.send('Welcome to Car Shop');
-}
-);
+});
 
-// app.use(errorHandler);
+app.use(errorHandler);
+
+
 
 export default app;

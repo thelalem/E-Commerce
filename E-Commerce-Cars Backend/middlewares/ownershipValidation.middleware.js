@@ -3,15 +3,20 @@ export const validateOwnership = (model, field) => async (req, res, next) => {
         const resource = await model.findById(req.params.id);
 
         if (!resource) {
-            return res.status(404).json({ message: 'Resource not found' });
+            const error = new Error('Resource not found');
+            error.statusCode = 404; // Not Found
+            return next(error);
         }
 
         if (resource[field].toString() !== req.user.id) {
-            return res.status(403).json({ message: 'You do not have permission to access this resource' });
+            const error = new Error('You do not have permission to access this resource');
+            error.statusCode = 403; // Forbidden
+            return next(error);
         }
-        next();
+
+        next(); // Proceed to the next middleware or route handler
     } catch (error) {
-        console.error('Error validating ownership:', error);
-        res.status(500).json({ message: 'Server error' });
+        error.statusCode = 500; // Internal Server Error
+        next(error); // Pass the error to the global error handler
     }
-}
+};

@@ -49,4 +49,7 @@ orderSchema.pre(/^find/, function (next) {
     next();
 });
 
+orderSchema.index({ buyer: 1 });
+orderSchema.index({ status: 1 });
+
 export default mongoose.model('Order', orderSchema);

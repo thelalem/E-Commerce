@@ -4,16 +4,20 @@ import { generateToken } from '../config/jwt.js';
 import { UserResponseDTO } from '../dtos/user.dto.js';
 import { LoginResponseDTO } from '../dtos/auth.dto.js';
 
-export const loginUser = async (req, res) => {
+export const loginUser = async (req, res, next) => {
     const { email, password } = req.body;
     try {
         const user = await User.findOne({ email });
         if (!user) {
-            return res.status(400).json({ message: 'Invalid email or password' });
+            const error = new Error('Invalid email or password');
+            error.statusCode = 400;
+            return next(error);
         }
         const isMatch = await user.comparePassword(password);
         if (!isMatch) {
-            return res.status(400).json({ message: 'Invalid email or password' });
+            const error = new Error('Invalid email or password');
+            error.statusCode = 400;
+            return next(error);
         }
         const token = generateToken(user._id);
         const loginResponse = new LoginResponseDTO({
@@ -22,21 +26,22 @@ export const loginUser = async (req, res) => {
         });
 
         res.status(200).json(loginResponse);
-    }
-    catch (err) {
-        res.status(500).json({ message: 'Server error' });
+    } catch (err) {
+        next(err);
     }
 };
 
 // Register a new user
-export const createUser = async (req, res) => {
+export const createUser = async (req, res, next) => {
     console.log('Request body:', req.body); // Log the request body for debugging
     try {
         const { name, email, password, role, profilePicture, address } = req.body;
 
         const existingUser = await User.findOne({ email });
         if (existingUser) {
-            return res.status(400).json({ message: 'User already exists' });
+            const error = new Error('User already exists');
+            error.statusCode = 400;
+            return next(error);
         }
 
         const newUser = new User({
@@ -54,7 +59,7 @@ export const createUser = async (req, res) => {
         const userResponse = new UserResponseDTO(newUser);
         res.status(201).json({ user: userResponse, token });
     } catch (err) {
-        res.status(400).json({ message: err.message });
+        next(err);
     }
 };
 

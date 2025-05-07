@@ -5,9 +5,10 @@ import User from '../models/User.js';
 export const protect = async (req, res, next) => {
     let token;
 
-    // Check if token is provided in the Authorization header
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-        try {
+    try {
+
+        // Check if token is provided in the Authorization header
+        if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
             // Extract token from header
             token = req.headers.authorization.split(' ')[1]; // Format: Bearer <token>
 
@@ -16,26 +17,33 @@ export const protect = async (req, res, next) => {
 
             // If token is invalid or expired
             if (!decoded) {
-                return res.status(401).json({ message: 'Not authorized, token failed' });
+                const error = new Error('not authorized, token failed');
+                error.statusCode = 401; // Unauthorized
+                return next(error);
             }
 
             // Get user from the decoded token and attach to request
             const user = await User.findById(decoded.userId);
 
             if (!user || user.deleted) {
-                return res.status(401).json({ message: 'Not authorized, user not found' });
+                const error = new Error('not authorized, user not found or deleted');
+                error.statusCode = 401; // Unauthorized
+                return next(error);
             }
 
             req.user = user; // Attach user to request object
 
             next(); // Proceed to the next middleware or route handler
-        } catch (err) {
-            console.error(err);
-            res.status(401).json({ message: 'Not authorized, token error' });
         }
-    }
-    else {
-        return res.status(401).json({ message: 'Not authorized, no token' });
+        else {
+            const error = new Error('not authorized, no token');
+            error.statusCode = 401; // Unauthorized
+            return next(error);
+        }
+    } catch (err) {
+        err.statusCode = 401; // Unauthorized
+        next(err); // Pass the error to the next middleware
+
     }
 
 

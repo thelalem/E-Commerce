@@ -31,6 +31,32 @@
             }
           }
         }
+      },
+      "post": {
+        "summary": "Create a new product",
+        "tags": ["Products"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateProductRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Product created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/products/{id}": {
@@ -58,6 +84,69 @@
                 }
               }
             }
+          },
+          "404": {
+            "description": "Product not found"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update a product",
+        "tags": ["Products"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "The product ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProductRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Product updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Product"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Product not found"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a product",
+        "tags": ["Products"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "The product ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product deleted successfully"
           },
           "404": {
             "description": "Product not found"
@@ -126,163 +215,194 @@
           }
         }
       }
+    },
+    "/users/{id}": {
+      "get": {
+        "summary": "Get user by ID",
+        "tags": ["Users"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "The user ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update user details",
+        "tags": ["Users"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "The user ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a user",
+        "tags": ["Users"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "The user ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User deleted successfully"
+          },
+          "404": {
+            "description": "User not found"
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
       "Product": {
         "type": "object",
-        "required": ["name", "description", "price", "category", "location", "imageUrl", "stock"],
         "properties": {
-          "id": {
-            "type": "string",
-            "description": "The auto-generated ID of the product"
-          },
-          "name": {
-            "type": "string",
-            "description": "The name of the product"
-          },
-          "description": {
-            "type": "string",
-            "description": "The description of the product"
-          },
-          "price": {
-            "type": "number",
-            "description": "The price of the product"
-          },
-          "category": {
-            "type": "string",
-            "description": "The category of the product (e.g., SUV, Sedan, Pickup)"
-          },
-          "location": {
-            "type": "string",
-            "description": "The location of the product"
-          },
-          "imageUrl": {
-            "type": "string",
-            "description": "The URL of the product image"
-          },
-          "stock": {
-            "type": "number",
-            "description": "The stock quantity of the product"
-          }
-        },
-        "example": {
-          "id": "12345",
-          "name": "Tesla Model X",
-          "description": "A luxury electric SUV",
-          "price": 80000,
-          "category": "SUV",
-          "location": "California",
-          "imageUrl": "http://example.com/image.jpg",
-          "stock": 10
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "price": { "type": "number" },
+          "category": { "type": "string" },
+          "location": { "type": "string" },
+          "imageUrl": { "type": "string" },
+          "stock": { "type": "number" }
         }
       },
       "LoginRequest": {
         "type": "object",
         "required": ["email", "password"],
         "properties": {
-          "email": {
-            "type": "string",
-            "description": "The user's email address"
-          },
-          "password": {
-            "type": "string",
-            "description": "The user's password"
-          }
-        },
-        "example": {
-          "email": "user@example.com",
-          "password": "password123"
+          "email": { "type": "string" },
+          "password": { "type": "string" }
         }
       },
       "LoginResponse": {
         "type": "object",
         "properties": {
-          "message": {
-            "type": "string",
-            "description": "A success message"
-          },
-          "token": {
-            "type": "string",
-            "description": "The JWT token for authentication"
-          }
-        },
-        "example": {
-          "message": "Login successful",
-          "token": "your-jwt-token-here"
+          "token": { "type": "string" },
+          "user": { "$ref": "#/components/schemas/User" }
         }
       },
       "RegisterRequest": {
         "type": "object",
         "required": ["name", "email", "password", "role"],
         "properties": {
-          "name": {
-            "type": "string",
-            "description": "The user's name"
-          },
-          "email": {
-            "type": "string",
-            "description": "The user's email address"
-          },
-          "password": {
-            "type": "string",
-            "description": "The user's password"
-          },
-          "role": {
-            "type": "string",
-            "description": "The user's role (e.g., buyer or seller)"
-          }
-        },
-        "example": {
-          "name": "John Doe",
-          "email": "john.doe@example.com",
-          "password": "password123",
-          "role": "buyer"
+          "name": { "type": "string" },
+          "email": { "type": "string" },
+          "password": { "type": "string" },
+          "role": { "type": "string" }
         }
       },
       "RegisterResponse": {
         "type": "object",
         "properties": {
-          "message": {
-            "type": "string",
-            "description": "A success message"
-          },
-          "user": {
-            "type": "object",
-            "properties": {
-              "id": {
-                "type": "string",
-                "description": "The auto-generated ID of the user"
-              },
-              "name": {
-                "type": "string",
-                "description": "The user's name"
-              },
-              "email": {
-                "type": "string",
-                "description": "The user's email address"
-              },
-              "role": {
-                "type": "string",
-                "description": "The user's role"
-              },
-              "createdAt": {
-                "type": "string",
-                "description": "The timestamp when the user was created"
-              }
-            }
-          }
-        },
-        "example": {
-          "message": "User registered successfully",
-          "user": {
-            "id": "12345",
-            "name": "John Doe",
-            "email": "john.doe@example.com",
-            "role": "buyer",
-            "createdAt": "2025-05-07T12:00:00.000Z"
-          }
+          "user": { "$ref": "#/components/schemas/User" },
+          "token": { "type": "string" }
+        }
+      },
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "email": { "type": "string" },
+          "role": { "type": "string" },
+          "profilePicture": { "type": "string" },
+          "address": { "type": "string" }
+        }
+      },
+      "CreateProductRequest": {
+        "type": "object",
+        "required": ["name", "description", "price", "category", "location", "imageUrl", "stock"],
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "price": { "type": "number" },
+          "category": { "type": "string" },
+          "location": { "type": "string" },
+          "imageUrl": { "type": "string" },
+          "stock": { "type": "number" }
+        }
+      },
+      "UpdateProductRequest": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "description": { "type": "string" },
+          "price": { "type": "number" },
+          "category": { "type": "string" },
+          "location": { "type": "string" },
+          "imageUrl": { "type": "string" },
+          "stock": { "type": "number" }
+        }
+      },
+      "UpdateUserRequest": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "email": { "type": "string" },
+          "role": { "type": "string" },
+          "profilePicture": { "type": "string" },
+          "address": { "type": "string" }
         }
       }
     }

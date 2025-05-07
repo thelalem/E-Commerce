@@ -55,7 +55,8 @@ productSchema.pre(/^find/, function (next) {
     this.where({ deleted: false });
     next();
 });
-
+productSchema.index({ category: 1 });
+productSchema.index({ price: 1 });
 const Product = mongoose.model('Product', productSchema);
 
 export default Product;
