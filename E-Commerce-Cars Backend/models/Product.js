@@ -44,6 +44,10 @@ const productSchema = new mongoose.Schema(
             type: Boolean,
             default: false, // Soft deletion flag
         },
+        isFeatured: {
+            type: Boolean,
+            default: false, // Flag to mark featured products
+        }
     },
     {
         timestamps: true, // Automatically adds createdAt and updatedAt fields

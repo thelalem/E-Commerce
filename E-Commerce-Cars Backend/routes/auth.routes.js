@@ -1,11 +1,16 @@
 import express from 'express';
-import { createUser, loginUser } from '../controllers/auth.controller.js';
-import { validateCreateUser, validateLogin } from '../middlewares/validate.middleware.js';
+import { createUser, loginUser, refreshToken, logout } from '../controllers/auth.controller.js';
+import { validateDTO } from '../middlewares/validation.middleware.js';
+import { UserRequestDTO } from '../dtos/user.dto.js';
+import { loginRateLimiter } from '../middlewares/rateLimit.middleware.js';
+import { LoginRequestDTO } from '../dtos/auth.dto.js';
 
 
 const router = express.Router();
 
-router.post('/register', validateCreateUser, createUser);
-router.post('/login', validateLogin, loginUser);
+router.post('/register', validateDTO(UserRequestDTO), createUser);
+router.post('/login', loginRateLimiter, validateDTO(LoginRequestDTO), loginUser);
+router.post('/refresh-token', refreshToken);
+router.post('/logout', logout);
 
 export default router;

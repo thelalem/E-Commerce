@@ -1,4 +1,6 @@
-// Request DTO for creating or updating a user
+
+import Joi from 'joi';
+
 export class UserRequestDTO {
     constructor({ name, email, password, role, profilePicture, address }) {
         this.name = name;
@@ -8,6 +10,27 @@ export class UserRequestDTO {
         this.profilePicture = profilePicture;
         this.address = address;
     }
+
+    static schema = Joi.object({
+        name: Joi.string().required().messages({
+            'string.empty': 'Name is required and must be a string.',
+        }),
+        email: Joi.string().email().required().messages({
+            'string.email': 'Valid email is required.',
+        }),
+        password: Joi.string().min(6).required().messages({
+            'string.min': 'Password must be at least 6 characters.',
+        }),
+        role: Joi.string().valid('buyer', 'seller').optional().messages({
+            'any.only': 'Role must be either buyer or seller.',
+        }),
+        profilePicture: Joi.string().optional().messages({
+            'string.base': 'Profile picture must be a string.',
+        }),
+        address: Joi.string().optional().messages({
+            'string.base': 'Address must be a string.',
+        }),
+    });
 }
 
 // Response DTO for returning user data

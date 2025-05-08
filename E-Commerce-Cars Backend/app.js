@@ -13,7 +13,7 @@ import { errorHandler } from './middlewares/error.middleware.js';
 import connectDB from './config/db.js';
 import redisClient from './config/redis.js';
 
-
+import { generalRateLimiter, loginRateLimiter } from './middlewares/rateLimit.middleware.js';
 import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/user.routes.js';
 import productRoutes from './routes/product.routes.js';
@@ -31,7 +31,8 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 
-
+//Apply the general rate limiter to all routes
+app.use(generalRateLimiter);
 // Swagger UI setup
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 

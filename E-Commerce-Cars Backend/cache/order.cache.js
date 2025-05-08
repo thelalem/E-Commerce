@@ -1,4 +1,4 @@
-import redisClient from "../config/redis";
+import redisClient from "../config/redis.js";
 
 redisClient.on('error', (err) => {
     console.error('Redis Connection error:', err);

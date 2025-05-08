@@ -1,6 +1,7 @@
 import Product from '../models/Product.js';
 import { cacheProduct, getCachedProduct, invalidateProductCache } from '../cache/product.cache.js';
 import { ProductResponseDTO } from '../dtos/product.dto.js';
+import { set } from 'mongoose';
 
 // Create a new product
 export const createProduct = async (req, res, next) => {
@@ -139,3 +140,53 @@ export const getAllProducts = async (req, res, next) => {
         next(error);
     }
 };
+
+// Search and filter products
+export const searchProducts = async (req, res, next) => {
+    try {
+        const { query, category, minPrice, maxPrice, location, sort, page = 1, limit = 10 } = req.query;
+        const filter = { deleted: false };
+        if (query) {
+            filter.name = { $regex: query, $options: 'i' }; // Case-insensitive search
+        }
+        if (category) {
+            filter.category = category;
+        }
+        if (location) {
+            filter.location = location;
+        }
+        if (minPrice || maxPrice) {
+            filter.price = {};
+            if (minPrice) filter.price.$gte = parseFloat(minPrice);
+            if (maxPrice) filter.price.$lte = parseFloat(maxPrice);
+        }
+
+        const sortOptions = {};
+        if (sort) {
+            const [field, order] = sort.split(':');
+            set(sortOptions, field, order === 'desc' ? -1 : 1);
+        }
+
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+
+        const [products, total] = await Promise.all([
+            Product.find(filter)
+                .sort(sortOptions)
+                .skip(skip)
+                .limit(parseInt(limit))
+                .populate('seller', 'name email'),
+            Product.countDocuments(filter)
+        ]);
+
+        const productResponse = products.map(product => new ProductResponseDTO(product));
+        res.status(200).json({
+            products: productResponse,
+            total,
+            page: parseInt(page),
+            totalPages: Math.ceil(total / parseInt(limit))
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+

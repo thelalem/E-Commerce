@@ -11,7 +11,9 @@ import {
     getProductById,
     getAllProducts,
 } from '../controllers/product.controller.js';
-import { validateProductRequest } from '../middlewares/validate.middleware.js';
+// import { validateProductRequest } from '../middlewares/validate.middleware.js';
+import { validateDTO } from '../middlewares/validation.middleware.js';
+import { ProductRequestDTO } from '../dtos/product.dto.js';
 
 const router = express.Router();
 
@@ -20,7 +22,7 @@ router.post(
     '/',
     protect,
     authorizeRoles('seller'),
-    validateProductRequest,
+    validateDTO(ProductRequestDTO),
     createProduct
 );
 
@@ -30,7 +32,7 @@ router.put(
     protect,
     authorizeRoles('seller'),
     validateOwnership(Product, 'seller'),
-    validateProductRequest,
+    validateDTO(ProductRequestDTO),
     updateProduct
 );
 
@@ -42,5 +44,7 @@ router.get('/:id', protect, getProductById);
 
 // Get all products (accessible to all)
 router.get('/', getAllProducts);
+
+router.get('/search', getAllProducts);
 
 export default router;

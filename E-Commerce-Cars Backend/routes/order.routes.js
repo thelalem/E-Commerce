@@ -11,7 +11,9 @@ import {
     updateOrderStatus,
 } from '../controllers/order.controller.js';
 import Order from '../models/Order.js';
-import { validateOrderRequest } from '../middlewares/validate.middleware.js';
+// import { validateOrderRequest } from '../middlewares/validate.middleware.js';
+import { validateDTO } from '../middlewares/validation.middleware.js';
+import { OrderRequestDTO } from '../dtos/order.dto.js';
 
 const router = express.Router();
 
@@ -20,17 +22,17 @@ router.post(
     '/',
     protect,
     authorizeRoles('buyer'),
-    validateOrderRequest,
+    validateDTO(OrderRequestDTO),
     createOrder
 );
 
 // Get an order by ID (accessible to buyers and admins)
 router.get('/:id', protect, authorizeRoles('buyer', 'admin'), validateOwnership(Order, 'buyer'), getOrderById);
 
-// Get all orders (only admins)
-router.get('/', protect, authorizeRoles('admin'), getAllOrders);
+// Get all orders 
+router.get('/', protect, authorizeRoles('admin', 'seller'), getAllOrders);
 
-// Update order status (only admins)
-router.put('/:id/status', protect, authorizeRoles('admin'), updateOrderStatus);
+// Update order status 
+router.put('/:id/status', protect, authorizeRoles('admin', 'seller'), updateOrderStatus);
 
 export default router;
