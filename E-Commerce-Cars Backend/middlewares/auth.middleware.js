@@ -12,8 +12,10 @@ export const protect = async (req, res, next) => {
             // Extract token from header
             token = req.headers.authorization.split(' ')[1]; // Format: Bearer <token>
 
+
             // Verify token
             const decoded = verifyToken(token);
+
 
             // If token is invalid or expired
             if (!decoded) {
@@ -21,9 +23,9 @@ export const protect = async (req, res, next) => {
                 error.statusCode = 401; // Unauthorized
                 return next(error);
             }
-
             // Get user from the decoded token and attach to request
-            const user = await User.findById(decoded.userId);
+            const user = await User.findById(decoded.id);
+
 
             if (!user || user.deleted) {
                 const error = new Error('not authorized, user not found or deleted');
@@ -32,6 +34,7 @@ export const protect = async (req, res, next) => {
             }
 
             req.user = user; // Attach user to request object
+            console.log('user authenticated', req.user)
 
             next(); // Proceed to the next middleware or route handler
         }

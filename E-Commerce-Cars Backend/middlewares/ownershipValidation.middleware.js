@@ -1,5 +1,6 @@
 export const validateOwnership = (model, field) => async (req, res, next) => {
     try {
+        console.log('validating ownership')
         const resource = await model.findById(req.params.id);
 
         if (!resource) {

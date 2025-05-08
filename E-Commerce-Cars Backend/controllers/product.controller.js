@@ -8,7 +8,7 @@ export const createProduct = async (req, res, next) => {
         const { name, description, price, category, location, imageUrl, stock } = req.body;
 
         const seller = req.user._id;
-
+        console.log('seller:', seller);
         const product = await Product.create({
             name,
             description,
@@ -32,6 +32,7 @@ export const createProduct = async (req, res, next) => {
 // Update an existing product
 export const updateProduct = async (req, res, next) => {
     try {
+        console.log("Updating Product")
         const { id } = req.params;
 
         const product = await Product.findById(id);

@@ -11,6 +11,11 @@
       "description": "Development Server"
     }
   ],
+  "security":[
+    {
+      "bearerAuth": []
+    }
+  ],
   "paths": {
     "/products": {
       "get": {
@@ -313,6 +318,13 @@
     }
   },
   "components": {
+    "securitySchemes":{
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+    }
+  },
     "schemas": {
       "Product": {
         "type": "object",

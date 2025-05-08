@@ -103,7 +103,8 @@ export const validateOrderRequest = (req, res, next) => {
 };
 
 export const validateProductRequest = (req, res, next) => {
-    const { name, description, price, category, location, imageUrl, seller, stock } = req.body;
+    const { name, description, price, category, location, imageUrl, stock } = req.body;
+    const seller = req.user._id;
 
     const errors = [];
 
@@ -152,6 +153,7 @@ export const validateProductRequest = (req, res, next) => {
     if (errors.length > 0) {
         return res.status(400).json({ message: 'Validation failed', errors });
     }
+    console.log('Product request validated successfully');
 
     next();
 };
