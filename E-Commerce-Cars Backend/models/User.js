@@ -58,7 +58,7 @@ userSchema.pre(/^find/, function (next) {
 }
 );
 
-userSchema.index({ email: 1 });
+
 
 
 const User = mongoose.model('User', userSchema);

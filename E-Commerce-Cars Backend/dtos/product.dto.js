@@ -1,5 +1,13 @@
 import Joi from 'joi';
+import mongoose, { mongo } from 'mongoose';
 
+
+const objectIdValidator = (value, helpers) => {
+    if (!mongoose.Types.ObjectId.isValid(value)) {
+        return helpers.error('any.invalid');
+    }
+    return value;
+}
 // Request DTO for creating or updating a product
 export class ProductRequestDTO {
     constructor({ name, description, price, category, location, imageUrl, seller, stock }) {
@@ -29,10 +37,11 @@ export class ProductRequestDTO {
         location: Joi.string().required().messages({
             'string.empty': 'Location is required and must be a string.',
         }),
-        imageUrl: Joi.string().required().messages({
-            'string.empty': 'Image URL is required and must be a string.',
+        imageUrl: Joi.string().optional(),
+        seller: Joi.string().custom(objectIdValidator).optional().messages({
+            'any.invalid': 'Seller ID must be a valid ObjectId.',
+            'string.empty': 'Seller ID is required and must be a valid ObjectId.',
         }),
-        seller: Joi.string().optional(),
         stock: Joi.number().min(0).required().messages({
             'number.min': 'Stock must be a non-negative number.',
         }),

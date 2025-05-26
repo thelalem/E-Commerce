@@ -2,11 +2,12 @@ import Joi from 'joi';
 
 // Request DTO for creating or updating an order
 export class OrderRequestDTO {
-    constructor({ buyer, products, totalPrice, status }) {
+    constructor({ buyer, products, totalPrice, status, shippingAddress }) {
         this.buyer = buyer;
         this.products = products;
         this.totalPrice = totalPrice;
         this.status = status;
+        this.shippingAddress = shippingAddress; // Add shippingAddress
     }
 
     static schema = Joi.object({
@@ -26,17 +27,28 @@ export class OrderRequestDTO {
             .messages({
                 'array.min': 'Products must contain at least one item.',
             }),
+        status: Joi.string()
+            .valid('pending', 'shipped', 'delivered', 'cancelled')
+            .optional()
+            .messages({
+                'any.only': 'Status must be one of pending, shipped, delivered, or cancelled.',
+            }),
+        shippingAddress: Joi.string().required().messages({
+            'string.empty': 'Shipping address is required.',
+            'any.required': 'Shipping address is required.',
+        }), // Add validation for shippingAddress
     });
 }
 
 // Response DTO for returning order data
 export class OrderResponseDTO {
-    constructor({ _id, buyer, products, totalPrice, status, createdAt }) {
+    constructor({ _id, buyer, products, totalPrice, status, createdAt, shippingAddress }) {
         this.id = _id;
         this.buyer = buyer;
         this.products = products;
         this.totalPrice = totalPrice;
         this.status = status;
         this.createdAt = createdAt;
+        this.shippingAddress = shippingAddress; // Add shippingAddress
     }
 }

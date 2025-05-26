@@ -7,6 +7,7 @@ redisClient.on('error', (err) => {
 export const cacheProduct = async (key, data, expiration = 3600) => {
     try {
         await redisClient.set(key, JSON.stringify(data), { EX: expiration });
+        //console.log(`Product cached with key: ${key}`);
     } catch (error) {
         console.error('Error caching product:', error);
     }
@@ -15,6 +16,11 @@ export const cacheProduct = async (key, data, expiration = 3600) => {
 export const getCachedProduct = async (key) => {
     try {
         const cachedData = await redisClient.get(key);
+        // if (cachedData) {
+        //     console.log(`Cache hit for key: ${key}`);
+        // } else {
+        //     console.log(`Cache miss for key: ${key}`);
+        // }
         return cachedData ? JSON.parse(cachedData) : null;
     } catch (error) {
         console.error('Error retrieving cached product:', error);

@@ -8,8 +8,12 @@ import { cacheOrder, getCachedOrder, invalidateOrderCache } from '../cache/order
 // Create a new order
 export const createOrder = async (req, res, next) => {
     try {
-        const buyer = req.user._id; // Extract buyer from the authenticated user
-        const { products } = req.body;
+        const buyer = req.user._id;
+        const { products, shippingAddress } = req.body; // Include shippingAddress
+
+        if (!shippingAddress) {
+            return res.status(400).json({ message: 'Shipping address is required.' });
+        }
 
         // Validate product IDs
         const productIds = products.map((p) => {
@@ -71,6 +75,7 @@ export const createOrder = async (req, res, next) => {
             buyer,
             products: formattedProducts,
             totalPrice,
+            shippingAddress, // Save shippingAddress
             status: 'pending', // Default status
         });
 
@@ -78,6 +83,7 @@ export const createOrder = async (req, res, next) => {
         await invalidateProductCache('products:all');
 
         const orderResponse = new OrderResponseDTO(order);
+        console.log('Order created:', orderResponse);
         res.status(201).json({ message: 'Order created successfully', order: orderResponse });
     } catch (error) {
         next(error);
@@ -98,7 +104,11 @@ export const getOrderById = async (req, res, next) => {
             return res.status(200).json(cachedOrder);
         }
 
-        const order = await Order.findById(id).populate('buyer', 'name email');
+        const order = await Order.findById(id).populate('buyer', 'name email').populate({
+            path: 'products.product',
+            select: 'name price imageUrl description seller',
+            populate: { path: 'seller', select: 'name email' }
+        });
 
         if (!order) {
             const error = new Error('Order not found');
@@ -107,6 +117,7 @@ export const getOrderById = async (req, res, next) => {
         }
 
         const orderResponse = new OrderResponseDTO(order);
+        console.log('Order retrieved:', orderResponse);
         res.status(200).json(orderResponse);
     } catch (error) {
         next(error);
@@ -184,6 +195,82 @@ export const updateOrderStatus = async (req, res, next) => {
         await invalidateOrderCache('orders:all');
         const orderResponse = new OrderResponseDTO(order);
         res.status(200).json({ message: 'Order status updated successfully', order: orderResponse });
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+export const getBuyerOrders = async (req, res, next) => {
+    try {
+
+        const buyerId = req.user._id;
+
+
+        if (!mongoose.isValidObjectId(buyerId)) {
+            console.log('Invalid buyer ID:', buyerId);
+            return res.status(400).json({ message: 'Invalid buyer ID.' });
+        }
+
+        const orders = await Order.find({ buyer: buyerId })
+            .populate('products.product', 'name price')
+            .populate('buyer', 'name email')
+            .sort({ createdAt: -1 }); // Sort by creation date, most recent first
+
+        if (!orders || orders.length === 0) {
+            return res.status(404).json({ message: 'No orders found for this buyer.' });
+        }
+
+        const sanitizedOrders = orders.filter((order) => order && order.products && order.products.length > 0);
+
+
+        const orderResponses = orders.map((order) => new OrderResponseDTO(order));
+        res.status(200).json(orderResponses);
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+
+export const getOrderBySeller = async (req, res, next) => {
+    try {
+        const sellerId = req.user._id;
+
+        if (!mongoose.isValidObjectId(sellerId)) {
+            return res.status(400).json({ message: 'Invalid seller ID.' });
+        }
+
+        // Check if the data is already cached
+        const cacheKey = `sellerOrders:${sellerId}`;
+        const cachedOrders = await getCachedOrder(cacheKey);
+        if (cachedOrders) {
+            return res.status(200).json(cachedOrders);
+        }
+
+        // Fetch seller's products
+        const sellerProducts = await Product.find({ seller: sellerId }).select('_id');
+        const productIds = sellerProducts.map((product) => product._id);
+
+        if (productIds.length === 0) {
+            return res.status(404).json({ message: 'No products found for this seller.' });
+        }
+
+        // Fetch orders containing the seller's products
+        const orders = await Order.find({ 'products.product': { $in: productIds } })
+            .populate('buyer', 'name email')
+            .populate('products.product', 'name price');
+
+        if (!orders || orders.length === 0) {
+            return res.status(404).json({ message: 'No orders found for your products.' });
+        }
+
+        // Cache the fetched orders
+        await cacheOrder(cacheKey, orders);
+
+        const orderResponses = orders.map((order) => new OrderResponseDTO(order));
+        //console.log('Seller Orders:', orderResponses);
+        res.status(200).json(orderResponses);
     } catch (error) {
         next(error);
     }

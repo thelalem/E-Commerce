@@ -41,6 +41,10 @@ const orderSchema = new mongoose.Schema({
         type: Boolean,
         default: false, // Soft deletion flag
     },
+    shippingAddress: {
+        type: String,
+        required: true, // Ensure every order has a shipping address
+    },
 });
 
 // Query middleware to exclude soft-deleted orders

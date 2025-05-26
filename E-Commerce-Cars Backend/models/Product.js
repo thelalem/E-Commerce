@@ -56,6 +56,9 @@ const productSchema = new mongoose.Schema(
 
 // Query middleware to exclude soft-deleted products
 productSchema.pre(/^find/, function (next) {
+    if (this.getOptions().skipDeletedFilter) {
+        return next();
+    }
     this.where({ deleted: false });
     next();
 });

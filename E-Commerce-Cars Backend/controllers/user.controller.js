@@ -23,7 +23,7 @@ export const getUserById = async (req, res, next) => {
 // Update user details
 export const updateUser = async (req, res, next) => {
     try {
-        const { name, email, password, profilePicture, address } = req.body;
+        const { name, email, password, address } = req.body;
         const user = await User.findById(req.params.id);
 
         if (!user) {
@@ -35,8 +35,11 @@ export const updateUser = async (req, res, next) => {
         user.name = name || user.name;
         user.email = email || user.email;
         user.password = password ? await bcrypt.hash(password, 10) : user.password;
-        user.profilePicture = profilePicture || user.profilePicture;
         user.address = address || user.address;
+
+        if (req.file) {
+            user.profilePicture = `uploads/${req.file.filename}`;
+        }
 
         await user.save();
         const userResponse = new UserResponseDTO(user);

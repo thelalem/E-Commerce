@@ -1,13 +1,13 @@
 import Product from '../models/Product.js';
 import { cacheProduct, getCachedProduct, invalidateProductCache } from '../cache/product.cache.js';
 import { ProductResponseDTO } from '../dtos/product.dto.js';
-import { set } from 'mongoose';
+import mongoose from 'mongoose';
 
 // Create a new product
 export const createProduct = async (req, res, next) => {
     try {
-        const { name, description, price, category, location, imageUrl, stock } = req.body;
-
+        const { name, description, price, category, location, stock } = req.body;
+        const imageUrl = req.file ? `uploads/${req.file.filename}` : null;
         const seller = req.user._id;
         console.log('seller:', seller);
         const product = await Product.create({
@@ -21,9 +21,12 @@ export const createProduct = async (req, res, next) => {
             seller,
         });
 
-        await invalidateProductCache('products:all');
+        await invalidateProductCache('products:all'); // Invalidate all products
+        await invalidateProductCache(`sellerProducts:${seller}`); // Invalidate seller-specific products
+        await invalidateProductCache('search:{}'); // Invalidate default search results
 
         const productResponse = new ProductResponseDTO(product);
+        console.log("productResponse", productResponse);
         res.status(201).json({ message: 'Product created successfully', product: productResponse });
     } catch (error) {
         next(error);
@@ -35,8 +38,12 @@ export const updateProduct = async (req, res, next) => {
     try {
         console.log("Updating Product")
         const { id } = req.params;
+        if (!req.body) {
+            return res.status(400).json({ message: 'Request body is missing' });
+        }
 
         const product = await Product.findById(id);
+        const seller = product.seller;
 
         if (!product) {
             const error = new Error('Product not found');
@@ -44,19 +51,36 @@ export const updateProduct = async (req, res, next) => {
             return next(error);
         }
 
+
         if (product.seller.toString() !== req.user._id.toString()) {
             const error = new Error('You are not authorized to update this product');
             error.statusCode = 403;
             return next(error);
         }
 
-        Object.assign(product, req.body);
-        await product.save();
+        const allowedUpdates = ['name', 'description', 'price', 'category', 'location', 'imageUr;', 'stock', 'isFeatured'];
+        const updates = {};
+
+        allowedUpdates.forEach(field => {
+            if (field in req.body) {
+                updates[field] = req.body[field];
+            }
+        });
+
+        const updatedProduct = await Product.findByIdAndUpdate(id, updates, {
+            new: true, // Return the updated document
+            runValidators: true,
+        }).populate('seller', 'name email');
+
+
 
         await invalidateProductCache(`products:${id}`);
         await invalidateProductCache('products:all');
+        await invalidateProductCache('products:all'); // Invalidate all products
+        await invalidateProductCache(`sellerProducts:${seller}`); // Invalidate seller-specific products
+        await invalidateProductCache('search:{}'); // Invalidate default search results
 
-        const productResponse = new ProductResponseDTO(product);
+        const productResponse = new ProductResponseDTO(updatedProduct);
         res.status(200).json({ message: 'Product updated successfully', product: productResponse });
     } catch (error) {
         next(error);
@@ -87,6 +111,9 @@ export const deleteProduct = async (req, res, next) => {
 
         await invalidateProductCache(`products:${id}`);
         await invalidateProductCache('products:all');
+        await invalidateProductCache('products:all'); // Invalidate all products
+        await invalidateProductCache(`sellerProducts:${seller}`); // Invalidate seller-specific products
+        await invalidateProductCache('search:{}'); // Invalidate default search results
 
         res.status(200).json({ message: 'Product deleted successfully' });
     } catch (error) {
@@ -115,6 +142,7 @@ export const getProductById = async (req, res, next) => {
         await cacheProduct(`products:${id}`, product);
 
         const productResponse = new ProductResponseDTO(product);
+        console.log("productRespond", productResponse);
         res.status(200).json(productResponse);
     } catch (error) {
         next(error);
@@ -124,6 +152,7 @@ export const getProductById = async (req, res, next) => {
 // Get all products
 export const getAllProducts = async (req, res, next) => {
     try {
+        res.set('cache-control', 'no-store');
         const cachedProducts = await getCachedProduct('products:all');
         if (cachedProducts) {
             return res.status(200).json(cachedProducts);
@@ -144,7 +173,15 @@ export const getAllProducts = async (req, res, next) => {
 // Search and filter products
 export const searchProducts = async (req, res, next) => {
     try {
-        const { query, category, minPrice, maxPrice, location, sort, page = 1, limit = 10 } = req.query;
+        const { query, category, minPrice, maxPrice, location, sort, page = 1, limit = 30 } = req.query;
+
+        // Generate a unique cache key based on query parameters
+        const cacheKey = `search:${JSON.stringify(req.query)}`;
+        const cachedResults = await getCachedProduct(cacheKey);
+        if (cachedResults) {
+            return res.status(200).json(cachedResults);
+        }
+
         const filter = { deleted: false };
         if (query) {
             filter.name = { $regex: query, $options: 'i' }; // Case-insensitive search
@@ -163,8 +200,8 @@ export const searchProducts = async (req, res, next) => {
 
         const sortOptions = {};
         if (sort) {
-            const [field, order] = sort.split(':');
-            set(sortOptions, field, order === 'desc' ? -1 : 1);
+            const [field, order] = sort.split('-');
+            sortOptions[field] = order === 'asc' ? 1 : -1; // 1 for ascending, -1 for descending
         }
 
         const skip = (parseInt(page) - 1) * parseInt(limit);
@@ -179,14 +216,117 @@ export const searchProducts = async (req, res, next) => {
         ]);
 
         const productResponse = products.map(product => new ProductResponseDTO(product));
-        res.status(200).json({
+
+        const response = {
             products: productResponse,
             total,
             page: parseInt(page),
             totalPages: Math.ceil(total / parseInt(limit))
-        });
+        };
+
+        // Cache the search results
+        await cacheProduct(cacheKey, response);
+
+        res.status(200).json(response);
     } catch (error) {
         next(error);
     }
 };
 
+export const getFeaturedProducts = async (req, res, next) => {
+    try {
+        const cacheKey = 'featuredProducts';
+        const cachedProducts = await getCachedProduct(cacheKey);
+        if (cachedProducts) {
+            return res.status(200).json(cachedProducts);
+        }
+
+        const products = await Product.find({ isFeatured: true, deleted: false })
+            .populate('seller', 'name email')
+            .limit(4)
+            .sort({ createdAt: -1 });
+
+        // Cache the fetched products
+        await cacheProduct(cacheKey, products);
+
+        res.status(200).json(products.map(p => new ProductResponseDTO(p)));
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const getProductsBySeller = async (req, res, next) => {
+    try {
+        const { sellerId } = req.params;
+
+        // Check if the data is already cached
+        const cacheKey = `sellerProducts:${sellerId}`;
+        const cachedProducts = await getCachedProduct(cacheKey);
+        if (cachedProducts) {
+            return res.status(200).json(cachedProducts);
+        }
+
+        const products = await Product.find({ seller: sellerId, deleted: false })
+            .populate('seller', 'name email')
+            .sort({ createdAt: -1 });
+
+        if (products.length === 0) {
+            return res.status(404).json({ message: 'No products found for this seller' });
+        }
+
+        // Cache the fetched products
+        await cacheProduct(cacheKey, products);
+
+        const productResponse = products.map(product => new ProductResponseDTO(product));
+        res.status(200).json(productResponse);
+    } catch (error) {
+        next(error);
+    }
+}
+
+export const batchGetProducts = async (req, res, next) => {
+    try {
+        const { productIds } = req.body;
+
+        if (!Array.isArray(productIds) || productIds.length === 0) {
+            return res.status(400).json({ message: 'Invalid product IDs' });
+        }
+
+        const invalidIds = productIds.filter(id => !mongoose.isValidObjectId(id));
+        if (invalidIds.length > 0) {
+            return res.status(400).json({ message: 'Invalid product IDs', invalidIds });
+        }
+
+        // Check cache for each product ID
+        const cachedProducts = await Promise.all(
+            productIds.map(async (id) => {
+                const cachedProduct = await getCachedProduct(`products:${id}`);
+                return cachedProduct ? cachedProduct : null;
+            })
+        );
+
+        // Filter out null values (products not found in cache)
+        const missingProductIds = productIds.filter((id, index) => !cachedProducts[index]);
+
+        // Fetch missing products from the database
+        const missingProducts = await Product.find({ _id: { $in: missingProductIds } }).setOptions({ skipDeletedFilter: true });
+        console.log('Missing Products:', missingProducts);
+
+        // Cache the missing products
+        await Promise.all(
+            missingProducts.map((product) => cacheProduct(`products:${product._id}`, product))
+        );
+
+        // Combine cached and fetched products
+        const allProducts = [...cachedProducts.filter(Boolean), ...missingProducts];
+
+        if (allProducts.length === 0) {
+            return res.status(404).json({ message: 'No products found for the provided IDs' });
+        }
+
+        res.status(200).json(allProducts);
+    } catch (error) {
+        console.error('Error in batchGetProducts:', error);
+        next(error);
+    }
+};

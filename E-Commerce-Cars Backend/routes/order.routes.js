@@ -9,6 +9,8 @@ import {
     getOrderById,
     getAllOrders,
     updateOrderStatus,
+    getBuyerOrders,
+    getOrderBySeller,
 } from '../controllers/order.controller.js';
 import Order from '../models/Order.js';
 // import { validateOrderRequest } from '../middlewares/validate.middleware.js';
@@ -25,13 +27,17 @@ router.post(
     validateDTO(OrderRequestDTO),
     createOrder
 );
+router.get('/buyer', protect, authorizeRoles('buyer'), getBuyerOrders);
+
 
 // Get an order by ID (accessible to buyers and admins)
 router.get('/:id', protect, authorizeRoles('buyer', 'admin'), validateOwnership(Order, 'buyer'), getOrderById);
 
-// Get all orders 
-router.get('/', protect, authorizeRoles('admin', 'seller'), getAllOrders);
 
+// Get all orders 
+router.get('/', protect, authorizeRoles('admin'), getAllOrders);
+
+router.get('/seller/orders', protect, authorizeRoles('seller'), getOrderBySeller);
 // Update order status 
 router.put('/:id/status', protect, authorizeRoles('admin', 'seller'), updateOrderStatus);
 
