@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { getMessages, sendMessage } from '../../utils/messagesAPI';
 
 const Messages = () => {
   const { currentUser } = useAuth(); 
@@ -7,28 +8,40 @@ const Messages = () => {
   const [replyContentMap, setReplyContentMap] = useState({});
   const socketRef = useRef();
 
+  const normalizeMessage = (message) => ({
+    ...message,
+    senderId: typeof message.senderId === 'object' ? message.senderId._id : message.senderId,
+    recipientId: typeof message.recipientId === 'object' ? message.recipientId._id : message.recipientId,
+    senderName: message.senderName || (message.senderId?.name ?? ''),
+    recipientName: message.recipientName || (message.recipientId?.name ?? ''),
+    productId: typeof message.productId === 'object' ? message.productId._id : message.productId,
+    productName: typeof message.productId === 'object' ? message.productId.name : message.productName ?? '',
+
+  })
   useEffect(() => {
-    const fetchMessages = () => {
+    const fetchMessages = async() => {
       try {
-        const allKeys = Object.keys(localStorage);
-        let allMessages = [];
+        // const allKeys = Object.keys(localStorage);
+        // let allMessages = [];
 
-        // Retrieve all messages stored in localStorage
-        allKeys.forEach((key) => {
-          if (key.startsWith("messages_")) {
-            const stored = JSON.parse(localStorage.getItem(key));
-            if (Array.isArray(stored)) {
-              allMessages.push(...stored);
-            }
-          }
-        });
+        // // Retrieve all messages stored in localStorage
+        // allKeys.forEach((key) => {
+        //   if (key.startsWith("messages_")) {
+        //     const stored = JSON.parse(localStorage.getItem(key));
+        //     if (Array.isArray(stored)) {
+        //       allMessages.push(...stored);
+        //     }
+        //   }
+        // });
 
-        // Filter messages relevant to the current user
-        const userMessages = allMessages.filter(
-          msg => msg.recipientId === currentUser?.id || msg.senderId === currentUser?.id
-        );
+        // // Filter messages relevant to the current user
+        // const userMessages = allMessages.filter(
+        //   msg => msg.recipientId === currentUser?.id || msg.senderId === currentUser?.id
+        // );
 
-        setMessages(userMessages);
+        const res = await getMessages();
+        setMessages(res.data.map(normalizeMessage));
+        console.log("Loaded messages:", messages);
       } catch (err) {
         console.error("Failed to load messages:", err);
       }
@@ -52,13 +65,13 @@ const Messages = () => {
         const newMessage = JSON.parse(event.data);
         console.log("Incoming message:", newMessage);
 
-        // Add new incoming message to the state and localStorage
+        // Add new incoming message to state if it's for the current user
         if (newMessage.recipientId === currentUser.id) {
-          setMessages(prev => [...prev, newMessage]);
+          setMessages(prev => [...prev, normalizeMessage(newMessage)]);
 
-          const key = `messages_${newMessage.productId}`;
-          const existing = JSON.parse(localStorage.getItem(key)) || [];
-          localStorage.setItem(key, JSON.stringify([...existing, newMessage]));
+          // const key = `messages_${newMessage.productId}`;
+          // const existing = JSON.parse(localStorage.getItem(key)) || [];
+          // localStorage.setItem(key, JSON.stringify([...existing, newMessage]));
         }
       } catch (err) {
         console.error("Error processing WebSocket message:", err);
@@ -72,20 +85,25 @@ const Messages = () => {
     return () => socketRef.current?.close();
   }, [currentUser]);
 
-  const handleReply = (productId, recipientId, key) => {
+  const handleReply = async (productId, recipient, key) => {
     const replyContent = replyContentMap[key];
     if (!replyContent?.trim()) return;
 
+    const recipientId = typeof recipient === 'object' ? recipient._id : recipient;
+    const recipientName = typeof recipient === 'object' ? recipient.name : null;
+    
+
     const reply = {
-      id: Date.now(),
       productId,
       content: replyContent,
       senderId: currentUser.id,
       senderName: currentUser.name,
       senderType: "seller",
       recipientId,
+      recipientName,
       createdAt: new Date().toISOString()
     };
+    console.log("Sending reply:", reply);
 
     // Send the reply via WebSocket if the connection is open
     if (socketRef.current?.readyState === WebSocket.OPEN) {
@@ -96,13 +114,22 @@ const Messages = () => {
     setMessages(prev => [...prev, reply]);
     setReplyContentMap(prev => ({ ...prev, [key]: '' }));
 
-    const storageKey = `messages_${productId}`;
-    const existing = JSON.parse(localStorage.getItem(storageKey)) || [];
-    localStorage.setItem(storageKey, JSON.stringify([...existing, reply]));
+    // const storageKey = `messages_${productId}`;
+    // const existing = JSON.parse(localStorage.getItem(storageKey)) || [];
+    // localStorage.setItem(storageKey, JSON.stringify([...existing, reply]));
+
+    try{
+      const {createdAt, ...messageData} = reply;
+      console.log("Sending message to backend:", messageData);
+      await sendMessage(messageData);
+    }catch (err) {
+      console.error("Failed to send message to backend:", err);
+    }
   };
 
   // Group messages by senderId and productId
   const groupedConversations = messages.reduce((groups, msg) => {
+    console.log("Processing message:", msg);
     const otherPartyId = msg.senderId === currentUser.id ? msg.recipientId : msg.senderId;
     const key = `${otherPartyId}_${msg.productId}`;
     if (!groups[key]) {
@@ -158,7 +185,7 @@ const Messages = () => {
               />
               <button
                 className="bg-blue-600 text-white px-3 py-1 rounded"
-                onClick={() => handleReply(convo.productId, convo.userId, key)}
+                onClick={() => handleReply(convo.productId, { _id: convo.userId, name: convo.userName }, key)}
               >
                 Send
               </button>

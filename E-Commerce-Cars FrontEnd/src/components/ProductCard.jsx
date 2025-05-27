@@ -4,11 +4,12 @@ import { useFavorites } from "../context/FavoritesContext";
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { useAuth } from "../context/AuthContext";
-import { useEffect } from "react";
+import { use, useEffect } from "react";
 
-const ProductCard = ({ product }) => {
+const ProductCard = ({ product, favoriteId }) => {
     const { addToCart } = useCart();
     const { currentUser } = useAuth();
+    const isSeller = useAuth();
     const { isFavorite, addToFavorites, removeFromFavorites } = useFavorites();
     const navigate = useNavigate();
 
@@ -16,6 +17,31 @@ const ProductCard = ({ product }) => {
         if(!currentUser){
             navigate('/login');
             return;
+        }
+        console.log("Current User:", isSeller);
+        if(isSeller){
+            toast.error("Sellers cannot add products to cart", {
+                position: "bottom-right",
+                autoClose: 2500,
+                hideProgressBar: true,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                theme: "light",
+            });
+            return;
+        }
+        if(product.stock <= 0) {
+            toast.error(`${product.name} is out of stock`, {
+                position: "bottom-right",
+                autoClose: 2500,
+                hideProgressBar: true,
+                closeOnClick: true,
+                pauseOnHover: true,
+                draggable: true,
+                progress: undefined,
+                theme: "light",
+            });
         }
         console.log("Adding to cart:", product);
         addToCart(product);
@@ -38,7 +64,7 @@ const ProductCard = ({ product }) => {
             return;
         }
         if (isFavorite(product._id)) {
-            removeFromFavorites(product._id);
+            removeFromFavorites(favoriteId);
             toast.info(`${product.name} removed from favorites`,{
                 position: "bottom-right",
                 autoClose: 2500,
@@ -63,6 +89,7 @@ const ProductCard = ({ product }) => {
             });
         }
     };
+    const isOutOfStock = product.stock <= 0;
     
     return (
         <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 relative">
@@ -96,18 +123,38 @@ const ProductCard = ({ product }) => {
                           : '/default-image.jpg'
                     }
                     alt={product.name}
-                    className="absolute h-full w-full object-cover hover:scale-105 transition-transform duration-500"
+                    className={`absolute h-full w-full object-cover hover:scale-105 transition-transform duration-500" ${
+                        isOutOfStock ? 'filter blur-[2px] brightness-90' : ''
+                    }`}
                     crossOrigin="anonymous"
                 />
                 <div className="absolute top-2 right-2 bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full">
                     {product.category}
                 </div>
+                {isOutOfStock && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="bg-red-600/90 text-white text-sm font-bold px-3 py-1 rounded-full backdrop-blur-sm">
+                            Out of Stock
+                        </span>
+                    </div>
+                )}
             </div>
 
             <div className="p-5">
                 <div className="flex justify-between items-start mb-2">
                     <h3 className="text-lg font-bold text-gray-900 truncate">{product.name}</h3>
                     <span className="text-sm text-gray-500">{product.location}</span>
+                </div>
+                <div>
+                    {product.stock > 0 ?(
+                        <span className="text-sm text-green-600 font-medium">
+                            In Stock ({product.stock} available)
+                        </span>
+                    ) : (
+                        <span className="text-sm text-red-600 font-semibold">
+                            Out of Stock
+                        </span>
+                    )}
                 </div>
                 <p className="text-xl font-bold text-blue-600 mb-4">
                     {new Intl.NumberFormat("en-ET", {
@@ -121,6 +168,7 @@ const ProductCard = ({ product }) => {
                     {/* Add to Cart Button */}
                     <button 
                         onClick={handleAddToCart}
+                        disabled={isOutOfStock}
                         className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center"
                     >
                         <svg
@@ -137,7 +185,7 @@ const ProductCard = ({ product }) => {
                                 d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
                             />
                         </svg>
-                        Add to Cart
+                        {isOutOfStock ? 'Out of Stock' : 'Add to Cart'}
                     </button>
                     
                     {/* View Details Button */}

@@ -16,7 +16,6 @@ import SellerDashboard from './pages/seller/SellerDashboard';
 import AddProduct from './pages/seller/AddProduct';
 import EditProduct from './pages/seller/EditProduct';
 import SellerOrdersPage from './pages/seller/SellerOrdersPage';
-import { initializeMockData } from "./utils/initializeMockData";
 import Messages from "./pages/seller/Messages";
 import Login from "./components/Login";
 import { useAuth } from "./context/AuthContext";
@@ -28,9 +27,6 @@ import OrderDetailsPage from "./pages/OrderDetails";
 import ProfilePage from "./pages/ProfilePage";
 
 function App() {
-  useEffect(() => {
-    initializeMockData(); 
-  }, []);
   return (
     <AuthProvider>
       <CartProvider>
@@ -62,16 +58,16 @@ function AuthWrapper() {
       <Route path="/about" element={<AboutPage />} />
       <Route path="/contact" element={<ContactPage />} />
       <Route path="/product/:id" element={<ProductDetails />} />
-
+      <Route
+        path="/favorites"
+        element={<FavoritesPage /> }
+      />
       {/* Buyer Routes */}
       <Route
         path="/cart"
         element={isBuyer ? <CartPage /> : <Navigate to="/login" replace />}
       />
-      <Route
-        path="/favorites"
-        element={isBuyer ? <FavoritesPage /> : <Navigate to="/login" replace />}
-      />
+      
       <Route
         path="/orders"
         element={isBuyer ? <MyOrdersPage /> : <Navigate to="/login" replace />}

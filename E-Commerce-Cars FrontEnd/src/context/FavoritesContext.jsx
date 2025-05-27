@@ -15,6 +15,7 @@ export const FavoritesProvider = ({ children }) => {
       try {
         setLoading(true);
         const res = await axiosClient.get('/favorites');
+        console.log('Fetched favorites:', res.data);
         setFavorites(res.data.favorites || []);
       } catch (error) {
         console.error('Error fetching favorites:', error);
@@ -59,6 +60,7 @@ export const FavoritesProvider = ({ children }) => {
   const isFavorite = (productId) => {
     return favorites.some((fav) => fav.product._id === productId);
   };
+  console.log('Favorites:', favorites);
 
   return (
     <FavoritesContext.Provider

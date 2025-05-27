@@ -125,6 +125,18 @@ const SellerDashboard = () => {
                       maximumFractionDigits: 0,
                     }).format(product.price)}
                   </p>
+
+                    {/* ✅ Stock indicator with color */}
+                    <p className="text-sm mt-1">
+                      {product.stock === 0 ? (
+                        <span className="text-red-600 font-semibold">Out of Stock</span>
+                      ) : product.stock < 5 ? (
+                        <span className="text-yellow-600 font-semibold">Low Stock: {product.stock}</span>
+                      ) : (
+                        <span className="text-green-600 font-semibold">In Stock: {product.stock}</span>
+                      )}
+                    </p>
+
                   <p className="text-sm text-gray-500 mt-2">{product.category}</p>
                   <div className="mt-4 flex space-x-2">
                     <Link

@@ -22,7 +22,7 @@ function ProductDetails() {
       setLoading(true);
       try{
         const res = await axiosClient.get(`/products/${id}`);
-        console.log("Fetched product:", res.data);
+        console.log("Fetched product in product deailts page:", res.data);
         setProduct(res.data);
       }catch (error) {
         console.error("Error fetching product:", error);
@@ -36,20 +36,29 @@ function ProductDetails() {
 
   // Initialize WebSocket and load messages
   useEffect(() => {
-    if (!product) return;
+    if (!currentUser || !product) return;
 
     // Load existing messages from localStorage
-    const loadMessages = () => {
-      const messageKey = `messages_${product.id}`;
-      const storedMessages = JSON.parse(localStorage.getItem(messageKey)) || [];
-      setMessages(storedMessages);
-    };
+    // const loadMessages = () => {
+    //   const messageKey = `messages_${product.id}`;
+    //   const storedMessages = JSON.parse(localStorage.getItem(messageKey)) || [];
+    //   setMessages(storedMessages);
+    // };
 
-    loadMessages();
+    // loadMessages();
+    const fetchMessages = async () => {
+      try {
+        const res = await axiosClient.get(`/messages?productId=${product._id}`);
+        setMessages(res.data);
+      } catch (error) {
+        console.error("Error fetching messages:", error);
+      }
+    };
+    fetchMessages();
 
     // Initialize WebSocket connection with user ID in query params
     const userId = currentUser?.id || 'anonymous';
-    socketRef.current = new WebSocket(`ws://localhost:8080?userId=${userId}&productId=${product.id}`);
+    socketRef.current = new WebSocket(`ws://localhost:8080?userId=${userId}&productId=${product._id}`);
 
     socketRef.current.onopen = () => {
       console.log("WebSocket connection established");
@@ -65,16 +74,18 @@ function ProductDetails() {
         console.log("Received message:", incomingMessage);
 
         // Only process messages for this product
-        if (incomingMessage.productId === product.id) {
-          setMessages((prevMessages) => {
-            const updatedMessages = [...prevMessages, incomingMessage];
+        if (incomingMessage.productId === product._id) {
+          setMessages(
+            setMessages((prev) => [...prev, incomingMessage])
+            //(prevMessages) => {
+            // const updatedMessages = [...prevMessages, incomingMessage];
             
-            // Store in localStorage with product ID as key
-            const messageKey = `messages_${product.id}`;
-            localStorage.setItem(messageKey, JSON.stringify(updatedMessages));
+            // // Store in localStorage with product ID as key
+            // const messageKey = `messages_${product.id}`;
+            // localStorage.setItem(messageKey, JSON.stringify(updatedMessages));
             
-            return updatedMessages;
-          });
+            //return updatedMessages;}
+          );
         }
       } catch (error) {
         console.error("Error parsing WebSocket message:", error);
@@ -95,16 +106,15 @@ function ProductDetails() {
 
   const sendMessage = (e) => {
     e.preventDefault();
-    if (!newMessage.trim() || !currentUser) return;
+    if (!newMessage.trim() || !currentUser  || !product) return;
 
     const message = {
-      id: Date.now(),
-      productId: product.id,
-      productName: product.name,
+      productId: product._id,
       senderId: currentUser.id,
       senderName: currentUser.name,
       senderType: isBuyer ? "buyer" : "seller",
       recipientId: isBuyer ? product.seller._id : null,
+      recipientName: isBuyer ? product.seller.name : null,
       content: newMessage,
       createdAt: new Date().toISOString(),
     };
@@ -119,17 +129,23 @@ function ProductDetails() {
     }
 
     // Update local state immediately
-    setMessages((prevMessages) => {
-      const updatedMessages = [...prevMessages, message];
+    setMessages(
+      (prev) => [...prev, message]
+      // (prevMessages) => {
+      // const updatedMessages = [...prevMessages, message];
       
-      // Store in localStorage
-      const messageKey = `messages_${product.id}`;
-      localStorage.setItem(messageKey, JSON.stringify(updatedMessages));
+      // // Store in localStorage
+      // const messageKey = `messages_${product.id}`;
+      // localStorage.setItem(messageKey, JSON.stringify(updatedMessages));
       
-      return updatedMessages;
-    });
+      // return updatedMessages;}
+    );
 
     setNewMessage("");
+    const {createdAt, ...messageToSend} = message; // Exclude createdAt for backend
+    axiosClient.post("/messages", messageToSend).catch((error) => {
+      console.error("Failed to send message to backend:", error);
+    })
   };
 
   const toggleChat = () => {
@@ -304,14 +320,21 @@ function ProductDetails() {
                         }`}
                       >
                         <p>{msg.content}</p>
-                        <p className={`text-xs mt-1 ${
-                          msg.senderType === "buyer" ? "text-blue-100" : "text-gray-500"
-                        }`}>
-                          {msg.createdAt ? new Date(msg.createdAt).toLocaleTimeString([], {
-                            hour: '2-digit',
-                            minute: '2-digit'
-                          }) : "Invalid Date"}
-                        </p>
+                          <p className={`text-xs mt-1 ${
+                            msg.senderType === "buyer" ? "text-blue-100" : "text-gray-500"
+                          }`}>
+                            {
+                              new Date(
+                                msg.createdAt && !isNaN(new Date(msg.createdAt))
+                                  ? msg.createdAt
+                                  : Date.now()
+                              ).toLocaleTimeString([], {
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })
+                            }
+                          </p>
+
                       </div>
                     </div>
                   ))
