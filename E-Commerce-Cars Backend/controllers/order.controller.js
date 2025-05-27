@@ -80,7 +80,18 @@ export const createOrder = async (req, res, next) => {
         });
 
         await invalidateOrderCache('orders:all');
+
+        // Invalidate all global product caches
         await invalidateProductCache('products:all');
+        await invalidateProductCache('featuredProducts');
+        await invalidateProductCache('search:{}');
+
+        // Invalidate all affected individual products and sellers
+        for (const product of productDetails) {
+            await invalidateProductCache(`products:${product._id}`);
+            await invalidateProductCache(`sellerProducts:${product.seller}`);
+        }
+
 
         const orderResponse = new OrderResponseDTO(order);
         console.log('Order created:', orderResponse);

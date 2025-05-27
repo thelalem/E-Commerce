@@ -1,21 +1,28 @@
+// dtos/message.dto.js
 import Joi from 'joi';
 
 export class MessageRequestDTO {
-    constructor({ sellerId, productId, message }) {
-        this.sellerId = sellerId;
+    constructor({ productId, content, senderId, senderName, senderType, recipientId, recipientName }) {
         this.productId = productId;
-        this.message = message;
+        this.content = content;
+        this.senderId = senderId;
+        this.senderName = senderName;
+        this.senderType = senderType;
+        this.recipientId = recipientId;
+        this.recipientName = recipientName;
     }
 
     static schema = Joi.object({
-        sellerId: Joi.string().required().messages({
-            'string.empty': 'Seller ID is required.',
-        }),
         productId: Joi.string().required().messages({
             'string.empty': 'Product ID is required.',
         }),
-        message: Joi.string().required().messages({
-            'string.empty': 'Message is required.',
+        content: Joi.string().required().messages({
+            'string.empty': 'Content is required.',
         }),
+        senderId: Joi.string().required(),
+        senderName: Joi.string().optional(),
+        senderType: Joi.string().valid('seller', 'buyer').required(),
+        recipientId: Joi.string().required(),
+        recipientName: Joi.string().optional()
     });
 }

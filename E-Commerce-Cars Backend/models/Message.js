@@ -2,14 +2,38 @@ import mongoose from "mongoose";
 
 const messageSchema = new mongoose.Schema(
     {
-        buyer: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-        seller: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-        product: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
-        messsage: { type: String, required: true },
+        productId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Product",
+            required: true,
+        },
+        content: {
+            type: String,
+            required: true,
+        },
+        senderId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
+        },
+        senderName: {
+            type: String,
+        },
+        senderType: {
+            type: String,
+            enum: ["seller", "buyer"],
+            required: true,
+        },
+        recipientId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true,
+        },
+        recipientName: {
+            type: String,
+        },
     },
-    {
-        timestamps: true, // Automatically adds createdAt and updatedAt fields
-    }
+    { timestamps: true }
 );
 
 const Message = mongoose.model("Message", messageSchema);

@@ -20,6 +20,7 @@ import productRoutes from './routes/product.routes.js';
 import orderRoutes from './routes/order.routes.js';
 import cartRoutes from './routes/cart.routes.js';
 import favoriteRoutes from './routes/favorite.routes.js';
+import messagesRoutes from './routes/messages.routes.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -73,6 +74,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/favorites', favoriteRoutes)
+app.use('/api/messages', messagesRoutes);
 // app.use('/api/semantic', semanticRoutes);
 
 

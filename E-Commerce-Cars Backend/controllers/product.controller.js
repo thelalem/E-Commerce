@@ -76,9 +76,10 @@ export const updateProduct = async (req, res, next) => {
 
         await invalidateProductCache(`products:${id}`);
         await invalidateProductCache('products:all');
-        await invalidateProductCache('products:all'); // Invalidate all products
         await invalidateProductCache(`sellerProducts:${seller}`); // Invalidate seller-specific products
         await invalidateProductCache('search:{}'); // Invalidate default search results
+        await invalidateProductCache('featuredProducts');
+
 
         const productResponse = new ProductResponseDTO(updatedProduct);
         res.status(200).json({ message: 'Product updated successfully', product: productResponse });
