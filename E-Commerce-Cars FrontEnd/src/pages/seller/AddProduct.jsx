@@ -85,13 +85,11 @@ const AddProduct = () => {
       navigate('/seller/dashboard');
     }, 2000);
     }catch (error) {
-      // If backend sends an array of errors (common for validation)
       if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
         error.response.data.errors.forEach(err => {
           toast.error(err.msg || err.message || JSON.stringify(err));
         });
       } 
-      // If backend sends a single error message
       else if (error.response?.data?.message) {
         toast.error(error.response.data.message);
       } 
@@ -192,7 +190,7 @@ const AddProduct = () => {
         <div>
           <label className="block text-sm font-medium text-gray-700">Product Image</label>
           <div className="mt-1 flex items-center">
-            <div className="relative">
+            <div className={`relative ${errors.image ? 'border border-red-500 rounded-md' : ''}`}>
               {formData.previewImage ? (
                 <img
                   src={formData.previewImage}
@@ -219,7 +217,9 @@ const AddProduct = () => {
               Choose Image
             </button>
           </div>
+          {errors.image && <p className="mt-1 text-sm text-red-600">{errors.image}</p>}
         </div>
+
 
         <div className="flex justify-end space-x-4">
           <button

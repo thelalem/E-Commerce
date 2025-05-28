@@ -156,6 +156,16 @@ function ProductDetails() {
     setIsChatOpen(!isChatOpen);
   };
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[300px]">
+        <div className="animate-pulse flex flex-col items-center">
+          <div className="h-8 w-8 bg-blue-500 rounded-full mb-2"></div>
+          <p className="text-blue-600 font-medium">Loading your orders...</p>
+        </div>
+      </div>
+    );
+  }
   if (!product) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">

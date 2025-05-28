@@ -8,8 +8,8 @@ import { use, useEffect } from "react";
 
 const ProductCard = ({ product, favoriteId }) => {
     const { addToCart } = useCart();
-    const { currentUser } = useAuth();
-    const isSeller = useAuth();
+    const { currentUser, isSeller } = useAuth();
+
     const { isFavorite, addToFavorites, removeFromFavorites } = useFavorites();
     const navigate = useNavigate();
 
@@ -20,6 +20,7 @@ const ProductCard = ({ product, favoriteId }) => {
         }
         console.log("Current User:", isSeller);
         if(isSeller){
+            console.log("Is Seller:", isSeller);
             toast.error("Sellers cannot add products to cart", {
                 position: "bottom-right",
                 autoClose: 2500,

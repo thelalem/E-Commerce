@@ -42,7 +42,7 @@ const SellerOrdersPage = () => {
       } catch (error) {
         console.error("Error fetching seller orders:", error);
         setOrders([]);
-        toast.error("Failed to fetch seller orders."); // Show error toast
+        toast.error(error.response.data.message); // Show error toast
       } finally {
         setLoading(false);
       }
@@ -151,7 +151,7 @@ const SellerOrdersPage = () => {
                   <td className="px-6 py-4">
                     <div className="space-y-3">
                       {order.products.map((product, index) => (
-                        <div key={index} className="flex items-center gap-4">
+                        <div key={product._id} className="flex items-center gap-4">
                           <img
                             src={
                               product?.imageUrl

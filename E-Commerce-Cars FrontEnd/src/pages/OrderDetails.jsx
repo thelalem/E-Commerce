@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import axiosClient from "../utils/axios";
 import { FiShoppingBag, FiCalendar, FiTruck, FiDollarSign, FiLoader } from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
 
 const OrderDetailsPage = () => {
   const { orderId } = useParams();
@@ -10,6 +11,7 @@ const OrderDetailsPage = () => {
   const [order, setOrder] = useState(null);
   const [productDetails, setProductDetails] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate()
 
   // Formatter for Ethiopian Birr (ETB)
   const formatPrice = (price) => {
@@ -121,6 +123,26 @@ const OrderDetailsPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
+      <button
+          onClick={() => navigate(-2)}
+          className="flex items-center text-blue-600 hover:text-blue-800 mb-8 transition-colors duration-200"
+        >
+          <svg
+            className="w-5 h-5 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M10 19l-7-7m0 0l7-7m-7 7h18"
+            />
+          </svg>
+          Back to listings
+        </button>
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-bold text-gray-900">Order Details</h1>
           <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>
