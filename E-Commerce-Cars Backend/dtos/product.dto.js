@@ -58,8 +58,18 @@ export class ProductResponseDTO {
         this.category = category;
         this.location = location;
         this.imageUrl = imageUrl;
-        this.seller = seller;
         this.stock = stock;
         this.createdAt = createdAt;
+
+        if (seller && typeof seller === 'object') {
+            this.seller = {
+                id: seller._id?.toString() || seller.id,
+                name: seller.name,
+                email: seller.email,
+            };
+        }
+        else {
+            this.seller = seller || null;
+        }
     }
 }

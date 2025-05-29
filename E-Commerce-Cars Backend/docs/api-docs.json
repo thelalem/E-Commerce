@@ -604,6 +604,128 @@
           }
         }
       }
+    },
+    "/favorites": {
+      "get": {
+        "summary": "Get all favorite products for the user",
+        "tags": ["Favorites"],
+        "responses": {
+          "200": {
+            "description": "List of favorite products",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Product"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Add a product to favorites",
+        "tags": ["Favorites"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FavoriteRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Product added to favorites",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Favorite"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Remove a product from favorites",
+        "tags": ["Favorites"],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true,
+            "description": "The favorite ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product removed from favorites"
+          },
+          "404": {
+            "description": "Favorite not found"
+          }
+        }
+      }
+    },
+    "/semantic/data": {
+      "get": {
+        "summary": "Fetch semantic data",
+        "tags": ["Semantic"],
+        "responses": {
+          "200": {
+            "description": "Semantic data fetched successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/semantic/query": {
+      "post": {
+        "summary": "Query ontology",
+        "tags": ["Semantic"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "query": {
+                    "type": "string",
+                    "description": "SPARQL query string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Query executed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -789,6 +911,20 @@
             "description": "The new status of the order",
             "enum": ["pending", "shipped", "delivered", "cancelled"]
           }
+        }
+      },
+      "FavoriteRequest": {
+        "type": "object",
+        "properties": {
+          "productId": { "type": "string" }
+        }
+      },
+      "Favorite": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "user": { "type": "string" },
+          "product": { "$ref": "#/components/schemas/Product" }
         }
       }
     }

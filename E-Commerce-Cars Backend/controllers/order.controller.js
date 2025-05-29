@@ -138,6 +138,7 @@ export const getOrderById = async (req, res, next) => {
         }
 
         const orderResponse = new OrderResponseDTO(order);
+        await cacheOrder(`orders:${id}`, orderResponse);
         console.log('Order retrieved:', orderResponse);
         res.status(200).json(orderResponse);
     } catch (error) {
@@ -252,7 +253,7 @@ export const getBuyerOrders = async (req, res, next) => {
         };
 
         const orders = await Order.find({ buyer: buyerId })
-            .populate('products.product', 'name price')
+            .populate('products.product', 'name price imageUrl')
             .populate('buyer', 'name email')
             .sort({ createdAt: -1 }); // Sort by creation date, most recent first
 
@@ -263,9 +264,10 @@ export const getBuyerOrders = async (req, res, next) => {
         const sanitizedOrders = orders.filter((order) => order && order.products && order.products.length > 0);
 
 
-        // const orderResponses = sanitizedOrders.map((order) => new OrderResponseDTO(order));
-        await cacheOrder(cacheKey, orders);
-        res.status(200).json(orders);
+        const orderResponses = sanitizedOrders.map((order) => new OrderResponseDTO(order));
+        await cacheOrder(cacheKey, orderResponses);
+        res.status(200).json(orderResponses);
+        console.log('Buyer Orders:', orderResponses);
     } catch (error) {
         next(error);
     }
@@ -307,11 +309,11 @@ export const getOrderBySeller = async (req, res, next) => {
         }
 
         // Cache the fetched orders
-        await cacheOrder(cacheKey, orders);
         console.log('Seller Orders:', orders);
         const orderResponses = orders.map((order) => new OrderResponseDTO(order));
-        //console.log('Seller Orders:', orderResponses);
-        res.status(200).json(orders);
+        console.log('Order Responses:', orderResponses);
+        await cacheOrder(cacheKey, orderResponses);
+        res.status(200).json(orderResponses);
     } catch (error) {
         next(error);
     }

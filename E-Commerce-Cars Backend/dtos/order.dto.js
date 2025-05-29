@@ -44,8 +44,29 @@ export class OrderRequestDTO {
 export class OrderResponseDTO {
     constructor({ _id, buyer, products, totalPrice, status, createdAt, shippingAddress }) {
         this.id = _id;
-        this.buyer = buyer;
-        this.products = products;
+        this.buyer = buyer && {
+            id: buyer._id?.toString() || buyer.id,
+            name: buyer.name,
+            email: buyer.email,
+        }
+        this.products = Array.isArray(products)
+            ? products.map(({ product, quantity, price }) => ({
+                product: product && {
+                    id: product._id,
+                    name: product.name,
+                    price: product.price,
+                    imageUrl: product.imageUrl,
+                    description: product.description,
+                    seller: product.seller && {
+                        id: product.seller._id,
+                        name: product.seller.name,
+                        email: product.seller.email,
+                    },
+                },
+                quantity,
+                price,
+            }))
+            : [];
         this.totalPrice = totalPrice;
         this.status = status;
         this.createdAt = createdAt;

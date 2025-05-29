@@ -129,10 +129,11 @@ export const getProductById = async (req, res, next) => {
 
         const cachedProduct = await getCachedProduct(`products:${id}`);
         if (cachedProduct) {
+            console.log("Cached product found:", cachedProduct);
             return res.status(200).json(cachedProduct);
         }
 
-        const product = await Product.findById(id).populate('seller', 'name email');
+        const product = await Product.findById(id).populate('seller', '  name email');
 
         if (!product) {
             const error = new Error('Product not found');
@@ -140,10 +141,9 @@ export const getProductById = async (req, res, next) => {
             return next(error);
         }
 
-        await cacheProduct(`products:${id}`, product);
-
         const productResponse = new ProductResponseDTO(product);
-        console.log("productRespond", productResponse);
+        await cacheProduct(`products:${id}`, productResponse);
+        console.log("Cached product:", productResponse);
         res.status(200).json(productResponse);
     } catch (error) {
         next(error);
@@ -161,10 +161,10 @@ export const getAllProducts = async (req, res, next) => {
 
         const products = await Product.find().populate('seller', 'name email');
 
-        await cacheProduct('products:all', products);
-
         const productResponse = products.map(product => new ProductResponseDTO(product));
-        res.status(200).json(products);
+        await cacheProduct('products:all', productResponse);
+        console.log("Cached all products:", productResponse);
+        res.status(200).json(productResponse);
 
     } catch (error) {
         next(error);
@@ -276,10 +276,9 @@ export const getProductsBySeller = async (req, res, next) => {
         }
 
         // Cache the fetched products
-        await cacheProduct(cacheKey, products);
-
         const productResponse = products.map(product => new ProductResponseDTO(product));
-        res.status(200).json(products);
+        await cacheProduct(cacheKey, productResponse);
+        res.status(200).json(productResponse);
     } catch (error) {
         next(error);
     }
