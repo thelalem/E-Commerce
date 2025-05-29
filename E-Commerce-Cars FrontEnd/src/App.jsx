@@ -8,6 +8,7 @@ import { useEffect } from "react";
 import { CartProvider } from "./context/CartContext";
 import { ToastContainer } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
+import {  FiLoader } from "react-icons/fi";
 import { FavoritesProvider } from "./context/FavoritesContext";
 import FavoritesPage from "./pages/FavoritesPage";
 import { AuthProvider } from './context/AuthContext';
@@ -45,8 +46,16 @@ function AuthWrapper() {
   const { currentUser, isSeller, isBuyer, loading } = useAuth();
 
   if (loading) {
-    return <div>Loading...</div>;
-  }
+    return(
+          <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <div className="text-center p-8 bg-white rounded-xl shadow-sm max-w-md w-full">
+              <FiLoader className="animate-spin text-blue-500 text-4xl mx-auto mb-4" />
+              <h2 className="text-xl font-semibold text-gray-700">Loading...</h2>
+              
+            </div>
+          </div>
+    );
+    }
 
   return (
     <Routes>

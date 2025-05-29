@@ -27,10 +27,11 @@ const OrderDetailsPage = () => {
       try {
         const res = await axiosClient.get(`/orders/${orderId}`);
         setOrder(res.data);
-
+        console.log("Fetched order details:aaaaaaaaaaaaa", res.data);
         const orderProductIds = res.data.products.map((item) =>
-          typeof item.product === "string" ? item.product : item.product._id
+          typeof item.product === "string" ? item.product : item.product._id || item.product.id
         );
+        console.log("Order product IDs:aaaaaaaaaaaaaa", orderProductIds);
         // Only fetch if not passed
         if (passedProducts.length === 0) {
           console.log("Fetching product details for order products...");
@@ -62,7 +63,7 @@ const OrderDetailsPage = () => {
     // If productDetails were fetched as full product objects (checkout redirect case)
     if (passedProducts.length === 0) {
       // productDetails is an array of product objects matching order products
-      const id = typeof item.product === "string" ? item.product : item.product._id;
+      const id = typeof item.product === "string" ? item.product : item.product._id || item.product.id;
       const product = productDetails.find((p) => (p._id || p.id) === id);
       return {
         ...product,
@@ -107,9 +108,9 @@ const OrderDetailsPage = () => {
 
   const getStatusColor = (status) => {
     switch (status.toLowerCase()) {
-      case "completed":
+      case "delivered":
         return "bg-green-100 text-green-800";
-      case "processing":
+      case "pending":
         return "bg-blue-100 text-blue-800";
       case "shipped":
         return "bg-purple-100 text-purple-800";
@@ -124,7 +125,7 @@ const OrderDetailsPage = () => {
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
       <button
-          onClick={() => navigate(-2)}
+          onClick={() => navigate(-1)}
           className="flex items-center text-blue-600 hover:text-blue-800 mb-8 transition-colors duration-200"
         >
           <svg
@@ -141,7 +142,7 @@ const OrderDetailsPage = () => {
               d="M10 19l-7-7m0 0l7-7m-7 7h18"
             />
           </svg>
-          Back to listings
+          Back 
         </button>
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-2xl font-bold text-gray-900">Order Details</h1>

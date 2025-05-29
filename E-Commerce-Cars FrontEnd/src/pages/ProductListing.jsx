@@ -3,6 +3,7 @@ import Header from "../components/Header";
 import ProductCard from "../components/ProductCard";
 import { useSearchParams } from 'react-router-dom';
 import axiosClient from "../utils/axios.js";
+import {  FiLoader } from "react-icons/fi";
 
 function ProductListingPage() {
     const [products, setProducts] = useState([]);
@@ -44,7 +45,7 @@ function ProductListingPage() {
 
                 const res = await axiosClient.get(`/products/search?${params.toString()}`);
                 const data = res.data;
-                console.log("Fetched Products:", data.products);
+                console.log("Fetched Products nside product listing:", data.products);
                 setProducts(Array.isArray(data.products) ? data.products : []);
             } catch (error) {
                 console.error("Error fetching products:", error);
@@ -67,6 +68,17 @@ function ProductListingPage() {
         }
         setSearchParams(newParams);   
     };
+    if (loading) {
+        return (
+          <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <div className="text-center p-8 bg-white rounded-xl shadow-sm max-w-md w-full">
+              <FiLoader className="animate-spin text-blue-500 text-4xl mx-auto mb-4" />
+              <h2 className="text-xl font-semibold text-gray-700">Loading Products</h2>
+              <p className="text-gray-500 mt-2">Please wait while we fetch Products</p>
+            </div>
+          </div>
+        );
+      }
 
     return (
         <div className="min-h-screen bg-gray-50">
@@ -132,16 +144,16 @@ function ProductListingPage() {
 
                         {/* Price Range Filter */}
                         <div className="flex-1 min-w-[200px]">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Price Range</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Price Range (in Birr)</label>
                             <select
                                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 value={priceRange}
                                 onChange={(e) => handleFilterChange('priceRange', e.target.value)}
                             >
                                 <option value="">All Prices</option>
-                                <option value="0-30000">Up to $30,000</option>
-                                <option value="30001-60000">$30,001 - $60,000</option>
-                                <option value="60001+">Above $60,000</option>
+                                <option value="0-4500000">Up to 4,500,000 Birr</option>
+                                <option value="4500001-9000000">4,500,001 - 9,000,000 Birr</option>
+                                <option value="9000001+">Above 9,000,000 Birr</option>
                             </select>
                         </div>
 
@@ -175,7 +187,7 @@ function ProductListingPage() {
                     {products.length > 0 ? (
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                             {products.map((product) => (
-                                <ProductCard key={product._id} product={product} />
+                                <ProductCard key={product.id} product={product} />
                             ))}
                         </div>
                     ) : (

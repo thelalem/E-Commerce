@@ -15,8 +15,8 @@ const FavoritesPage = () => {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {favorites.map(favorite => (
-            console.log("Products",favorite),
-            <ProductCard key={favorite._id} product={favorite.product} favoriteId= {favorite._id}/>
+            console.log("Products favoriteeeeeeeeeee",favorite),
+            <ProductCard key={favorite._id} product={favorite.product} />
           ))}
         </div>
       )}

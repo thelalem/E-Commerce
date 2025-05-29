@@ -15,20 +15,23 @@ const SellerOrdersPage = () => {
       try {
         const res = await axiosClient.get(`/orders/seller/orders`);
         console.log("Fetched seller orders:", res.data);
-
         const productIds = res.data.flatMap((order) =>
-          order.products.map((item) => item.product._id)
-        );
-
+          order.products.map((item) => 
+            typeof item.product === "string" ? item.product : item.product._id || item.product.id)
+        )
+        .filter(Boolean);
+        console.log("Product IDs:", productIds);
         const productDetailsRes = await axiosClient.post(`/products/batch`, {
           productIds,
         });
         const productDetails = productDetailsRes.data;
+        console.log("Product details in order page:", productDetails);
 
         const ordersWithProductDetails = res.data.map((order) => {
           const productsWithDetails = order.products.map((item) => {
             const productDetail = productDetails.find(
-              (product) => product._id === item.product._id
+              (product) =>
+              product._id === item.product._id || product._id === item.product.id
             );
             return {
               ...productDetail,
@@ -58,7 +61,7 @@ const SellerOrdersPage = () => {
       await axiosClient.put(`/orders/${orderId}/status`, { status: newStatus });
       setOrders((prevOrders) =>
         prevOrders.map((order) =>
-          order._id === orderId ? { ...order, status: newStatus } : order
+          order.id === orderId ? { ...order, status: newStatus } : order
         )
       );
       toast.success("Order status updated successfully!"); // Show success toast
@@ -141,9 +144,9 @@ const SellerOrdersPage = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {orders.map((order) => (
 
-                <tr key={order._id} className="hover:bg-blue-50 transition-colors">
+                <tr key={order.id} className="hover:bg-blue-50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    #{order._id? order._id.slice(0, 8): 'unknown'}...
+                    #{order.id? order.id.slice(0, 8): 'unknown'}...
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {order.buyer?.name || "N/A"}
@@ -185,7 +188,7 @@ const SellerOrdersPage = () => {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <select
                       value={order.status}
-                      onChange={(e) => handleStatusChange(order._id, e.target.value)}
+                      onChange={(e) => handleStatusChange(order.id, e.target.value)}
                       className={`block w-full pl-3 pr-10 py-2 text-base border rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
                         order.status === "pending"
                           ? "border-yellow-300 bg-yellow-50 text-yellow-700"

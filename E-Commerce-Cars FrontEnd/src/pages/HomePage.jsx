@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
 import Footer from '../components/Footer';
 import axiosClient from '../utils/axios';
-import { FiArrowRight, FiShoppingBag, FiStar, FiTruck, FiDollarSign } from 'react-icons/fi';
+import { FiArrowRight, FiShoppingBag, FiStar, FiTruck, FiDollarSign , FiLoader} from 'react-icons/fi';
 
 function HomePage() {
   const [featuredProducts, setFeaturedProducts] = useState([]);
@@ -20,6 +20,7 @@ function HomePage() {
         ]);
         setFeaturedProducts(featuredRes.data);
         setAllProducts(allRes.data);
+        console.log("Featured Products:", featuredRes.data);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching products:", error);
@@ -28,6 +29,17 @@ function HomePage() {
     };
     fetchProducts();
   }, []);
+
+  if (loading) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <div className="text-center p-8 bg-white rounded-xl shadow-sm max-w-md w-full">
+            <FiLoader className="animate-spin text-blue-500 text-4xl mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-gray-700">Loading ...</h2>
+          </div>
+        </div>
+      );
+    }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">

@@ -6,7 +6,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { useAuth } from "../context/AuthContext";
 import { use, useEffect } from "react";
 
-const ProductCard = ({ product, favoriteId }) => {
+const ProductCard = ({ product }) => {
     const { addToCart } = useCart();
     const { currentUser, isSeller } = useAuth();
 
@@ -64,8 +64,9 @@ const ProductCard = ({ product, favoriteId }) => {
             navigate('/login');
             return;
         }
-        if (isFavorite(product._id)) {
-            removeFromFavorites(favoriteId);
+        if (isFavorite(product._id || product.id)) {
+            removeFromFavorites(product._id || product.id);
+            
             toast.info(`${product.name} removed from favorites`,{
                 position: "bottom-right",
                 autoClose: 2500,

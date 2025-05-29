@@ -9,6 +9,7 @@ export const FavoritesProvider = ({ children }) => {
   const [favorites, setFavorites] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  
   // Fetch or re-sync favorites
   const fetchFavorites = async () => {
     if (currentUser) {
@@ -28,6 +29,10 @@ export const FavoritesProvider = ({ children }) => {
 
   // Initial fetch when user logs in
   useEffect(() => {
+    if (!currentUser) {
+      setFavorites([]); // Clear favorites if no user
+      return;
+    }
     fetchFavorites();
   }, [currentUser]);
 
@@ -46,9 +51,10 @@ export const FavoritesProvider = ({ children }) => {
   };
 
   // Remove a product from favorites
-  const removeFromFavorites = async (favoriteId) => {
+  const removeFromFavorites = async (productId) => {
     try {
-      const res = await axiosClient.delete(`/favorites/${favoriteId}`);
+      const favorite = favorites.find( f => f.product._id === productId);
+      const res = await axiosClient.delete(`/favorites/${favorite._id}`);
       console.log('Favorites after removing:', res.data.favorites);
       await fetchFavorites(); // Ensure state sync
     } catch (error) {
@@ -58,8 +64,12 @@ export const FavoritesProvider = ({ children }) => {
 
   // Check if a product is in the favorites list
   const isFavorite = (productId) => {
-    return favorites.some((fav) => fav.product._id === productId);
+    return favorites.some(
+      (fav) =>
+        (fav.product._id === productId || fav.product.id === productId)
+    );
   };
+  
   console.log('Favorites:', favorites);
 
   return (

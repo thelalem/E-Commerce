@@ -31,7 +31,7 @@ const EditProduct = () => {
       console.log('product.seller:', product.seller);
       console.log('currentUser:', currentUser);
 
-      const sellerId = product.seller?._id || product.seller?.id || product.seller;
+      const sellerId = typeof product.seller === 'string' ? product.seller : product.seller._id || product.seller.id;
       const userId =  currentUser._id || currentUser.id;
 
       if(String(sellerId) !== String(userId)) {

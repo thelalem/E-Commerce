@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import axiosClient from '../../utils/axios';
+import { FiLoader } from 'react-icons/fi';
 
 const SellerDashboard = () => {
   const { currentUser } = useAuth();
@@ -30,7 +31,8 @@ const SellerDashboard = () => {
           const price = typeof product.price === "number"
             ? product.price
             : parseFloat((product.price || "0").toString().replace(/[^0-9.]/g, ''));
-          return sum + price;
+          const stock = typeof product.stock === "number" ? product.stock : parseInt(product.stock || "0"); 
+          return sum + (price*stock);
         }, 0);
 
         setStats({
@@ -66,14 +68,52 @@ const SellerDashboard = () => {
   const confirmDelete = async () => {
     try {
       await axiosClient.delete(`/products/${deleteModal.productId}`);
-      setProducts(products.filter(product => (product.id || product._id) !== deleteModal.productId));
-      setDeleteModal({ isOpen: false, productId: null, productName: '' });
+  
+      const updatedProducts = products.filter(
+        product => (product.id || product._id) !== deleteModal.productId
+      );
+  
+      // Recalculate inventory value
+      const totalValue = updatedProducts.reduce((sum, product) => {
+        const price = typeof product.price === "number"
+          ? product.price
+          : parseFloat((product.price || "0").toString().replace(/[^0-9.]/g, ''));
+        const stock = typeof product.stock === "number"
+          ? product.stock
+          : parseInt(product.stock || "0");
+  
+        return sum + (price * stock);
+      }, 0);
+  
+      // Update state
+      setProducts(updatedProducts);
+      setStats({
+        totalProducts: updatedProducts.length,
+        totalValue: totalValue.toLocaleString('en-US', {
+          style: 'currency',
+          currency: 'ETB',
+          maximumFractionDigits: 0,
+        }),
+      });
     } catch (error) {
+      console.error('Error deleting product:', error);
+    } finally {
       setDeleteModal({ isOpen: false, productId: null, productName: '' });
     }
   };
+  
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center p-8 bg-white rounded-xl shadow-sm max-w-md w-full">
+          <FiLoader className="animate-spin text-blue-500 text-4xl mx-auto mb-4" />
+          <h2 className="text-xl font-semibold text-gray-700">Loading ...</h2>
+          <p className="text-gray-500 mt-2">Please wait while we load your dashboard</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -140,13 +180,13 @@ const SellerDashboard = () => {
                   <p className="text-sm text-gray-500 mt-2">{product.category}</p>
                   <div className="mt-4 flex space-x-2">
                     <Link
-                      to={`/seller/edit-product/${product._id}`}
+                      to={`/seller/edit-product/${product.id}`}
                       className="px-3 py-1 bg-yellow-500 text-white rounded-md text-sm hover:bg-yellow-600"
                     >
                       Edit
                     </Link>
                     <button
-                      onClick={() => handleDelete(product._id)}
+                      onClick={() => handleDelete(product.id)}
                       className="px-3 py-1 bg-red-500 text-white rounded-md text-sm hover:bg-red-600"
                     >
                       Delete

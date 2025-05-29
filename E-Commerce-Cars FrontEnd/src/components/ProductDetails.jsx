@@ -24,6 +24,7 @@ function ProductDetails() {
         const res = await axiosClient.get(`/products/${id}`);
         console.log("Fetched product in product deailts page:", res.data);
         setProduct(res.data);
+        console.log("Product details:", res.data);
       }catch (error) {
         console.error("Error fetching product:", error);
         setProduct(null);
@@ -48,7 +49,9 @@ function ProductDetails() {
     // loadMessages();
     const fetchMessages = async () => {
       try {
-        const res = await axiosClient.get(`/messages?productId=${product._id}`);
+        console.log("Fetching messages for product:", product.id);
+        const res = await axiosClient.get(`/messages?productId=${product.id}`);
+        
         setMessages(res.data);
       } catch (error) {
         console.error("Error fetching messages:", error);
@@ -58,7 +61,7 @@ function ProductDetails() {
 
     // Initialize WebSocket connection with user ID in query params
     const userId = currentUser?.id || 'anonymous';
-    socketRef.current = new WebSocket(`ws://localhost:8080?userId=${userId}&productId=${product._id}`);
+    socketRef.current = new WebSocket(`ws://localhost:8080?userId=${userId}&productId=${product.id}`);
 
     socketRef.current.onopen = () => {
       console.log("WebSocket connection established");
@@ -74,7 +77,7 @@ function ProductDetails() {
         console.log("Received message:", incomingMessage);
 
         // Only process messages for this product
-        if (incomingMessage.productId === product._id) {
+        if (incomingMessage.productId === product.id) {
           setMessages(
             setMessages((prev) => [...prev, incomingMessage])
             //(prevMessages) => {
@@ -109,11 +112,11 @@ function ProductDetails() {
     if (!newMessage.trim() || !currentUser  || !product) return;
 
     const message = {
-      productId: product._id,
+      productId: product.id,
       senderId: currentUser.id,
       senderName: currentUser.name,
       senderType: isBuyer ? "buyer" : "seller",
-      recipientId: isBuyer ? product.seller._id : null,
+      recipientId: isBuyer ? product.seller.id : null,
       recipientName: isBuyer ? product.seller.name : null,
       content: newMessage,
       createdAt: new Date().toISOString(),
@@ -161,7 +164,7 @@ function ProductDetails() {
       <div className="flex justify-center items-center min-h-[300px]">
         <div className="animate-pulse flex flex-col items-center">
           <div className="h-8 w-8 bg-blue-500 rounded-full mb-2"></div>
-          <p className="text-blue-600 font-medium">Loading your orders...</p>
+          <p className="text-blue-600 font-medium">Loading Details...</p>
         </div>
       </div>
     );

@@ -24,6 +24,7 @@ const MyOrdersPage = () => {
         
         const res = await axiosClient.get("/orders/buyer");
         const ordersData = res.data || [];
+        console.log("Fetched orders:", ordersData);
         
         // Enhanced error handling for missing data
         if (!Array.isArray(ordersData)) {
@@ -147,7 +148,7 @@ const MyOrdersPage = () => {
               d="M10 19l-7-7m0 0l7-7m-7 7h18"
             />
           </svg>
-          Back to listings
+          Back 
         </button>
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold text-gray-800">My Orders</h1>

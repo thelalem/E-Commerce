@@ -8,12 +8,13 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [accessToken, setAccessToken] = useState(null);
 
   // Fetch current user on app load
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
-        const res = await axiosClient.get('/auth/me'); // Backend validates token from cookie
+        const res = await axiosClient.get('/auth/me'); 
         setCurrentUser(res.data.user);
       } catch (error) {
         setCurrentUser(null);
@@ -24,8 +25,10 @@ export const AuthProvider = ({ children }) => {
     fetchCurrentUser();
   }, []);
 
-  const login = (userData) => {
-    setCurrentUser(userData.user); // Backend sets the cookie
+  const login = ({token, user}) => {
+    setAccessToken(token);
+    setCurrentUser(user); // Backend sets the cookie
+    localStorage.setItem('accessToken', token); // Store token in localStorage
   };
 
   const logout = async () => {
@@ -33,6 +36,8 @@ export const AuthProvider = ({ children }) => {
       await axiosClient.post('/auth/logout'); // Backend clears the cookie
     } catch (error) {}
     setCurrentUser(null);
+    setAccessToken(null);
+    localStorage.removeItem('accessToken'); // Clear token from localStorage
   };
 
   const value = {
