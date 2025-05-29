@@ -146,12 +146,6 @@ export const getAllOrders = async (req, res, next) => {
             }
         }
 
-        let filter = {};
-        if (req.user.role === 'seller') {
-            // Only return orders where at least one product belongs to this seller
-            filter['products'] = { $elemMatch: { seller: req.user._id } };
-        }
-
         // Populate buyer and products.product (and seller for each product)
         const orders = await Order.find(filter)
             .populate('buyer', 'name email')
@@ -217,11 +211,15 @@ export const getBuyerOrders = async (req, res, next) => {
 
         const buyerId = req.user._id;
 
-
         if (!mongoose.isValidObjectId(buyerId)) {
             console.log('Invalid buyer ID:', buyerId);
             return res.status(400).json({ message: 'Invalid buyer ID.' });
         }
+        const cacheKey = `buyerOrders:${buyerId}`;
+        const cachedOrders = await getCachedOrder(cacheKey);
+        if (cachedOrders) {
+            return res.status(200).json(cachedOrders);
+        };
 
         const orders = await Order.find({ buyer: buyerId })
             .populate('products.product', 'name price')
@@ -235,7 +233,8 @@ export const getBuyerOrders = async (req, res, next) => {
         const sanitizedOrders = orders.filter((order) => order && order.products && order.products.length > 0);
 
 
-        const orderResponses = orders.map((order) => new OrderResponseDTO(order));
+        const orderResponses = sanitizedOrders.map((order) => new OrderResponseDTO(order));
+        await cacheOrder(cacheKey, orderResponses);
         res.status(200).json(orderResponses);
     } catch (error) {
         next(error);

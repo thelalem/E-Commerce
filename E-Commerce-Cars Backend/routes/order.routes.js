@@ -35,10 +35,10 @@ router.get('/:id', protect, authorizeRoles('buyer', 'admin'), validateOwnership(
 
 
 // Get all orders 
-router.get('/', protect, authorizeRoles('admin'), getAllOrders);
+// router.get('/', protect, authorizeRoles('admin'), getAllOrders);
 
 router.get('/seller/orders', protect, authorizeRoles('seller'), getOrderBySeller);
 // Update order status 
-router.put('/:id/status', protect, authorizeRoles('admin', 'seller'), updateOrderStatus);
+router.put('/:id/status', protect, authorizeRoles('seller'), updateOrderStatus);
 
 export default router;

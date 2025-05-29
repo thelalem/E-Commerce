@@ -3,7 +3,7 @@ import Product from '../models/Product.js';
 
 export const getCart = async (req, res, next) => {
     try {
-        const cart = await Cart.findOne({ user: req.user._id }).populate('items.product', '_id name price imageUrl');
+        const cart = await Cart.findOne({ user: req.user._id }).populate('items.product', '_id name price imageUrl stock');
 
         if (!cart || cart.items.length === 0) {
             return res.status(200).json({ cartItems: [] });
@@ -16,6 +16,7 @@ export const getCart = async (req, res, next) => {
                 name: item.product.name,
                 price: item.product.price,
                 imageUrl: item.product.imageUrl,
+                stock: item.product.stock,
             },
             quantity: item.quantity,
         }));
