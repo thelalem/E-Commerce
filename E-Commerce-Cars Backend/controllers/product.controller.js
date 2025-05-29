@@ -309,12 +309,15 @@ export const batchGetProducts = async (req, res, next) => {
         const missingProductIds = productIds.filter((id, index) => !cachedProducts[index]);
 
         // Fetch missing products from the database
-        const missingProducts = await Product.find({ _id: { $in: missingProductIds } }).setOptions({ skipDeletedFilter: true });
+        const missingProducts = await Product.find({ _id: { $in: missingProductIds } }).populate('seller', 'name email').setOptions({ skipDeletedFilter: true });
         console.log('Missing Products:', missingProducts);
 
         // Cache the missing products
         await Promise.all(
-            missingProducts.map((product) => cacheProduct(`products:${product._id}`, product))
+            missingProducts.map((product) => {
+                const productResponse = new ProductResponseDTO(product);
+                return cacheProduct(`products:${product._id}`, productResponse);
+            })
         );
 
         // Combine cached and fetched products
