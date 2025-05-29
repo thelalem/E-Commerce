@@ -37,7 +37,7 @@ const MyOrdersPage = () => {
           if (Array.isArray(order.products)) {
             order.products.forEach(item => {
               if (item.product) {
-                const id = typeof item.product === 'string' ? item.product : item.product._id;
+                const id = typeof item.product === 'string' ? item.product : item.product.id || item.product._id;
                 if (id) productIds.push(id);
               }
             });
@@ -56,8 +56,8 @@ const MyOrdersPage = () => {
         // Merge products with their details
         const ordersWithProductDetails = ordersData.map(order => {
           const productsWithDetails = (order.products || []).map(item => {
-            const productId = typeof item.product === 'string' ? item.product : item.product?._id;
-            const productDetail = productDetails.find(p => p._id === productId);
+            const productId = typeof item.product === 'string' ? item.product : item.product?._id || item.product?.id;
+            const productDetail = productDetails.find(p => p.id  === productId);
             
             return {
               ...item,

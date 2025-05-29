@@ -29,9 +29,10 @@ const SellerOrdersPage = () => {
 
         const ordersWithProductDetails = res.data.map((order) => {
           const productsWithDetails = order.products.map((item) => {
+            const product = item.product;
+            const productId = typeof product === "string" ? product : product._id || product.id;
             const productDetail = productDetails.find(
-              (product) =>
-              product._id === item.product._id || product._id === item.product.id
+              (p) => p._id === productId   || p.id === productId
             );
             return {
               ...productDetail,
@@ -61,7 +62,7 @@ const SellerOrdersPage = () => {
       await axiosClient.put(`/orders/${orderId}/status`, { status: newStatus });
       setOrders((prevOrders) =>
         prevOrders.map((order) =>
-          order.id === orderId ? { ...order, status: newStatus } : order
+          (order.id || order._id)  === orderId ? { ...order, status: newStatus } : order
         )
       );
       toast.success("Order status updated successfully!"); // Show success toast
@@ -144,9 +145,9 @@ const SellerOrdersPage = () => {
             <tbody className="bg-white divide-y divide-gray-200">
               {orders.map((order) => (
 
-                <tr key={order.id} className="hover:bg-blue-50 transition-colors">
+                <tr key={order.id || order._id}  className="hover:bg-blue-50 transition-colors">
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                    #{order.id? order.id.slice(0, 8): 'unknown'}...
+                    #{(order.id || order._id)?.slice(0, 8) || 'unknown'}...
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     {order.buyer?.name || "N/A"}
@@ -154,7 +155,7 @@ const SellerOrdersPage = () => {
                   <td className="px-6 py-4">
                     <div className="space-y-3">
                       {order.products.map((product, index) => (
-                        <div key={product._id} className="flex items-center gap-4">
+                        <div key={product._id || product.id || index} className="flex items-center gap-4">
                           <img
                             src={
                               product?.imageUrl
