@@ -53,6 +53,13 @@ orderSchema.pre(/^find/, function (next) {
     next();
 });
 
+// orderSchema.post('save', async function (doc) {
+//     if (doc.status === 'delivered' && !doc.deleted) {
+//         await mongoose.model('Order').findByIdAndUpdate(doc._id, { deleted: true });
+//     }
+// });
+
+
 orderSchema.index({ buyer: 1 });
 orderSchema.index({ status: 1 });
 
