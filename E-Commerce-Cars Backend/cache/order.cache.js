@@ -31,4 +31,11 @@ export const invalidateOrderCache = async (key) => {
     }
 };
 
+export const clearAllCache = async () => {
+    try {
+        await redisClient.flushDB();
+    } catch (error) {
+        console.error('Error clearing all cache:', error);
+    }
+}
 

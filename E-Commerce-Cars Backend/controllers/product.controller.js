@@ -58,7 +58,7 @@ export const updateProduct = async (req, res, next) => {
             return next(error);
         }
 
-        const allowedUpdates = ['name', 'description', 'price', 'category', 'location', 'imageUr;', 'stock', 'isFeatured'];
+        const allowedUpdates = ['name', 'description', 'price', 'category', 'location', 'imageUrl', 'stock', 'isFeatured'];
         const updates = {};
 
         allowedUpdates.forEach(field => {
@@ -94,7 +94,7 @@ export const deleteProduct = async (req, res, next) => {
         const { id } = req.params;
 
         const product = await Product.findById(id);
-
+        const seller = product.seller;
         if (!product) {
             const error = new Error('Product not found');
             error.statusCode = 404;
@@ -324,7 +324,7 @@ export const batchGetProducts = async (req, res, next) => {
         if (allProducts.length === 0) {
             return res.status(404).json({ message: 'No products found for the provided IDs' });
         }
-
+        console.log('All Products:', allProducts);
         res.status(200).json(allProducts);
     } catch (error) {
         console.error('Error in batchGetProducts:', error);

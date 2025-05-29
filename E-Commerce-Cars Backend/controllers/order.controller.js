@@ -3,7 +3,7 @@ import Order from '../models/Order.js';
 import Product from '../models/Product.js';
 import { OrderResponseDTO } from '../dtos/order.dto.js';
 import { invalidateProductCache } from '../cache/product.cache.js';
-import { cacheOrder, getCachedOrder, invalidateOrderCache } from '../cache/order.cache.js';
+import { cacheOrder, clearAllCache, getCachedOrder, invalidateOrderCache } from '../cache/order.cache.js';
 
 // Create a new order
 export const createOrder = async (req, res, next) => {
@@ -79,18 +79,28 @@ export const createOrder = async (req, res, next) => {
             status: 'pending', // Default status
         });
 
-        await invalidateOrderCache('orders:all');
+        await Promise.all([
+            // Orders
+            invalidateOrderCache('orders:all'), // Admin or global order listing
+            invalidateOrderCache(`buyerOrders:${buyer}`), // Buyer's own orders
 
-        // Invalidate all global product caches
-        await invalidateProductCache('products:all');
-        await invalidateProductCache('featuredProducts');
-        await invalidateProductCache('search:{}');
+            // Products
+            invalidateProductCache('products:all'), // Global product listing
+            invalidateProductCache('featuredProducts'), // Featured listing
+            invalidateProductCache('search:{}'), // Search cache
 
-        // Invalidate all affected individual products and sellers
-        for (const product of productDetails) {
-            await invalidateProductCache(`products:${product._id}`);
-            await invalidateProductCache(`sellerProducts:${product.seller}`);
-        }
+            // Each product involved
+            ...formattedProducts.map(({ product }) => invalidateProductCache(`products:${product}`)),
+
+            // Each seller involved
+            ...productDetails.map((product) => invalidateProductCache(`sellerProducts:${product.seller}`)),
+
+            // Each seller's orders
+            ...productDetails.map((product) =>
+                invalidateOrderCache(`sellerOrders:${product.seller.toString()}`)
+            ),
+        ]);
+
 
 
         const orderResponse = new OrderResponseDTO(order);
@@ -147,7 +157,7 @@ export const getAllOrders = async (req, res, next) => {
         }
 
         // Populate buyer and products.product (and seller for each product)
-        const orders = await Order.find(filter)
+        const orders = await Order.find({})
             .populate('buyer', 'name email')
             .populate({
                 path: 'products.product',
@@ -172,7 +182,10 @@ export const updateOrderStatus = async (req, res, next) => {
             return res.status(400).json({ message: 'Invalid order ID.' });
         }
 
-        const order = await Order.findById(id);
+        const order = await Order.findById(id).populate({
+            path: 'products.product',
+            select: 'seller',
+        })
 
         if (!order) {
             const error = new Error('Order not found');
@@ -196,8 +209,25 @@ export const updateOrderStatus = async (req, res, next) => {
         order.status = status;
         await order.save();
 
-        await invalidateOrderCache(`orders:${id}`);
         await invalidateOrderCache('orders:all');
+        await invalidateOrderCache(`buyerOrders:${order.buyer._id}`);
+        // Invalidate all global product caches
+        await invalidateProductCache('products:all');
+        await invalidateProductCache('featuredProducts');
+        await invalidateProductCache('search:{}');
+
+        const uniqueSellers = new Set();
+        for (const item of order.products) {
+            const product = item.product;
+            await invalidateProductCache(`products:${product._id}`);
+            await invalidateProductCache(`sellerProducts:${product.seller}`);
+            uniqueSellers.add(product.seller.toString());
+        }
+
+        for (const sellerId of uniqueSellers) {
+            await invalidateOrderCache(`sellerOrders:${sellerId}`);
+        }
+
         const orderResponse = new OrderResponseDTO(order);
         res.status(200).json({ message: 'Order status updated successfully', order: orderResponse });
     } catch (error) {
