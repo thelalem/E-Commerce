@@ -30,7 +30,7 @@ import { dirname } from 'path';
 
 dotenv.config();
 connectDB();
-redisClient.connect();
+redisClient.connect().catch(console.error);
 
 
 const app = express();
