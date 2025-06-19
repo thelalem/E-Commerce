@@ -32,7 +32,7 @@ export const getFavorites = async (req, res, next) => {
     try {
         const userId = req.user._id;
         const favorites = await Favorite.find({ user: userId }).populate('product');
-        console.log("Ive been called", favorites);
+        // console.log("Ive been called", favorites);
         res.status(200).json({ favorites });
     } catch (error) {
         next(error);

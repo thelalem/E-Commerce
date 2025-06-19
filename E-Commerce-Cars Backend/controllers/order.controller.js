@@ -104,7 +104,7 @@ export const createOrder = async (req, res, next) => {
 
 
         const orderResponse = new OrderResponseDTO(order);
-        console.log('Order created:', orderResponse);
+        // console.log('Order created:', orderResponse);
         res.status(201).json({ message: 'Order created successfully', order: orderResponse });
     } catch (error) {
         next(error);
@@ -139,7 +139,7 @@ export const getOrderById = async (req, res, next) => {
 
         const orderResponse = new OrderResponseDTO(order);
         await cacheOrder(`orders:${id}`, orderResponse);
-        console.log('Order retrieved:', orderResponse);
+        // console.log('Order retrieved:', orderResponse);
         res.status(200).json(orderResponse);
     } catch (error) {
         next(error);
@@ -243,7 +243,7 @@ export const getBuyerOrders = async (req, res, next) => {
         const buyerId = req.user._id;
 
         if (!mongoose.isValidObjectId(buyerId)) {
-            console.log('Invalid buyer ID:', buyerId);
+            // console.log('Invalid buyer ID:', buyerId);
             return res.status(400).json({ message: 'Invalid buyer ID.' });
         }
         const cacheKey = `buyerOrders:${buyerId}`;
@@ -267,7 +267,7 @@ export const getBuyerOrders = async (req, res, next) => {
         const orderResponses = sanitizedOrders.map((order) => new OrderResponseDTO(order));
         await cacheOrder(cacheKey, orderResponses);
         res.status(200).json(orderResponses);
-        console.log('Buyer Orders:', orderResponses);
+        //console.log('Buyer Orders:', orderResponses);
     } catch (error) {
         next(error);
     }
@@ -309,9 +309,9 @@ export const getOrderBySeller = async (req, res, next) => {
         }
 
         // Cache the fetched orders
-        console.log('Seller Orders:', orders);
+        // console.log('Seller Orders:', orders);
         const orderResponses = orders.map((order) => new OrderResponseDTO(order));
-        console.log('Order Responses:', orderResponses);
+        // console.log('Order Responses:', orderResponses);
         await cacheOrder(cacheKey, orderResponses);
         res.status(200).json(orderResponses);
     } catch (error) {

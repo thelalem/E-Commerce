@@ -20,7 +20,7 @@ async function updateImageUrls() {
             };
         }
 
-        console.log('All imageUrl fields have been updated.');
+        // console.log('All imageUrl fields have been updated.');
     } catch (error) {
         console.error('Error updating imageUrl fields:', error);
     } finally {

@@ -13,7 +13,7 @@ const ProductCard = ({ product }) => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        console.log('Full image URL:', product.imageUrl.startsWith('http') ? product.imageUrl : `${import.meta.env.VITE_API_URL}${product.imageUrl}`);
+        // console.log('Full image URL:', product.imageUrl.startsWith('http') ? product.imageUrl : `${import.meta.env.VITE_API_URL}${product.imageUrl}`);
     }, [product.imageUrl]);
 
     const handleAddToCart = () => {

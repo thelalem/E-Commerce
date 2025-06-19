@@ -9,7 +9,7 @@ export const createProduct = async (req, res, next) => {
         const { name, description, price, category, location, stock } = req.body;
         const imageUrl = req.file ? `uploads/${req.file.filename}` : null;
         const seller = req.user._id;
-        console.log('seller:', seller);
+        // console.log('seller:', seller);
         const product = await Product.create({
             name,
             description,
@@ -26,7 +26,7 @@ export const createProduct = async (req, res, next) => {
         await invalidateProductCache('search:{}'); // Invalidate default search results
 
         const productResponse = new ProductResponseDTO(product);
-        console.log("productResponse", productResponse);
+        // console.log("productResponse", productResponse);
         res.status(201).json({ message: 'Product created successfully', product: productResponse });
     } catch (error) {
         next(error);
@@ -36,7 +36,7 @@ export const createProduct = async (req, res, next) => {
 // Update an existing product
 export const updateProduct = async (req, res, next) => {
     try {
-        console.log("Updating Product")
+        // console.log("Updating Product")
         const { id } = req.params;
         if (!req.body) {
             return res.status(400).json({ message: 'Request body is missing' });
@@ -129,7 +129,7 @@ export const getProductById = async (req, res, next) => {
 
         const cachedProduct = await getCachedProduct(`products:${id}`);
         if (cachedProduct) {
-            console.log("Cached product found:", cachedProduct);
+            // console.log("Cached product found:", cachedProduct);
             return res.status(200).json(cachedProduct);
         }
 
@@ -143,7 +143,7 @@ export const getProductById = async (req, res, next) => {
 
         const productResponse = new ProductResponseDTO(product);
         await cacheProduct(`products:${id}`, productResponse);
-        console.log("Cached product:", productResponse);
+        // console.log("Cached product:", productResponse);
         res.status(200).json(productResponse);
     } catch (error) {
         next(error);
@@ -163,7 +163,7 @@ export const getAllProducts = async (req, res, next) => {
 
         const productResponse = products.map(product => new ProductResponseDTO(product));
         await cacheProduct('products:all', productResponse);
-        console.log("Cached all products:", productResponse);
+        // console.log("Cached all products:", productResponse);
         res.status(200).json(productResponse);
 
     } catch (error) {
@@ -310,7 +310,7 @@ export const batchGetProducts = async (req, res, next) => {
 
         // Fetch missing products from the database
         const missingProducts = await Product.find({ _id: { $in: missingProductIds } }).populate('seller', 'name email').setOptions({ skipDeletedFilter: true });
-        console.log('Missing Products:', missingProducts);
+        // console.log('Missing Products:', missingProducts);
 
         // Cache the missing products
         await Promise.all(
@@ -326,7 +326,7 @@ export const batchGetProducts = async (req, res, next) => {
         if (allProducts.length === 0) {
             return res.status(404).json({ message: 'No products found for the provided IDs' });
         }
-        console.log('All Products:', allProducts);
+        // console.log('All Products:', allProducts);
         res.status(200).json(allProducts);
     } catch (error) {
         console.error('Error in batchGetProducts:', error);

@@ -25,7 +25,7 @@ export const loginUser = async (req, res, next) => {
         }
         const token = generateToken(user._id, user.role);
         const refreshToken = generateRefreshToken(user._id, user.role);
-        console.log('refreshToken:', refreshToken); // Log the refresh token for debugging
+        // console.log('refreshToken:', refreshToken); // Log the refresh token for debugging
 
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
@@ -48,7 +48,7 @@ export const loginUser = async (req, res, next) => {
 
 // Register a new user
 export const createUser = async (req, res, next) => {
-    console.log('Request body:', req.body); // Log the request body for debugging
+    // console.log('Request body:', req.body); // Log the request body for debugging
     try {
         const { name, email, password, role, profilePicture, address } = req.body;
 
@@ -90,7 +90,7 @@ export const createUser = async (req, res, next) => {
 
 export const refreshToken = async (req, res, next) => {
     const token = req.cookies.refreshToken;
-    console.log('Refresh token received:', token); // Log the received token for debugging
+    // console.log('Refresh token received:', token); // Log the received token for debugging
     if (!token) {
         const error = new Error('No refresh token provided');
         error.statusCode = 401;
@@ -99,7 +99,7 @@ export const refreshToken = async (req, res, next) => {
     try {
         const decoded = verifyRefreshToken(token);
         const accessToken = generateToken(decoded.id, decoded.role);
-        console.log('decoded refresh token:', decoded); // Log the decoded token for debugging
+        // console.log('decoded refresh token:', decoded); // Log the decoded token for debugging
         res.json({ token: accessToken });
     } catch (err) {
         const error = new Error('Invalid refresh token');
