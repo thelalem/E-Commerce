@@ -5,7 +5,9 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import cookieParser from 'cookie-parser';
 import swaggerUi from 'swagger-ui-express';
-import swaggerDocument from './docs/api-docs.json' with { type: 'json' };
+import fs from 'fs';
+const swaggerDocument = JSON.parse(fs.readFileSync('./docs/api-docs.json', 'utf-8'));
+
 import dotenv from 'dotenv';
 import { createClient } from 'redis';
 import { errorHandler } from './middlewares/error.middleware.js';
@@ -95,6 +97,8 @@ if (process.env.NODE_ENV === 'production') {
 
 
 app.use(errorHandler);
+
+console.log('Registered routes:', app._router.stack);
 
 
 
