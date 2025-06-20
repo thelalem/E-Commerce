@@ -4,9 +4,7 @@ import morgan from 'morgan';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import cookieParser from 'cookie-parser';
-import swaggerUi from 'swagger-ui-express';
-import fs from 'fs';
-const swaggerDocument = JSON.parse(fs.readFileSync('./docs/api-docs.json', 'utf-8'));
+
 
 import dotenv from 'dotenv';
 import { createClient } from 'redis';
@@ -45,8 +43,7 @@ app.use(cors({
     credentials: true,
 }));
 
-// Swagger UI setup
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -98,7 +95,7 @@ if (process.env.NODE_ENV === 'production') {
 
 app.use(errorHandler);
 
-console.log('Registered routes:', app._router.stack);
+
 
 
 
