@@ -81,11 +81,6 @@ app.use('/api/messages', messagesRoutes);
 
 
 
-app.all('/*splat', (req, res, next) => {
-    const error = new Error(`Cannot find ${req.originalUrl} on this server`);
-    error.statusCode = 404;
-    next(error);
-});
 
 
 
@@ -104,6 +99,11 @@ if (process.env.NODE_ENV === 'production') {
         res.sendFile(path.join(buildPath, 'index.html'));
     });
 }
+app.all('/*splat', (req, res) => {
+    res.status(404).json({
+        message: `The URL ${req.originalUrl} doesn't exist`
+    });
+});
 
 
 app.use(errorHandler);
