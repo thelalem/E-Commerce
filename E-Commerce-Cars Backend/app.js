@@ -25,6 +25,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 // import semanticRoutes from './routes/semantic.routes.js';
+import expressListEndpoints from 'express-list-endpoints';
 
 
 
@@ -69,6 +70,7 @@ const limiter = rateLimit({
 
 
 app.use('/api/auth', authRoutes);
+console.log(expressListEndpoints(app));
 app.use('/api/users', userRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/orders', orderRoutes);
@@ -78,11 +80,14 @@ app.use('/api/messages', messagesRoutes);
 // app.use('/api/semantic', semanticRoutes);
 
 
-app.all('/*splat', (req, res, next) => {
+
+app.all('/{*splat}', (req, res, next) => {
     const error = new Error(`Cannot find ${req.originalUrl} on this server`);
     error.statusCode = 404;
     next(error);
 });
+
+
 
 if (process.env.NODE_ENV === 'production') {
     app.use(express.static(path.join(__dirname, 'client/build')));
@@ -94,8 +99,6 @@ if (process.env.NODE_ENV === 'production') {
 
 
 app.use(errorHandler);
-
-
 
 
 
