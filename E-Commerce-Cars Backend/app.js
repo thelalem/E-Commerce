@@ -5,7 +5,7 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import cookieParser from 'cookie-parser';
 
-
+import fs from 'fs';
 import dotenv from 'dotenv';
 import { createClient } from 'redis';
 import { errorHandler } from './middlewares/error.middleware.js';
@@ -81,20 +81,27 @@ app.use('/api/messages', messagesRoutes);
 
 
 
-// app.all('/:any*', (req, res, next) => {
-//     const error = new Error(`Cannot find ${req.originalUrl} on this server`);
-//     error.statusCode = 404;
-//     next(error);
-// });
+app.all('/*splat', (req, res, next) => {
+    const error = new Error(`Cannot find ${req.originalUrl} on this server`);
+    error.statusCode = 404;
+    next(error);
+});
+
 
 
 
 
 if (process.env.NODE_ENV === 'production') {
-    app.use(express.static(path.join(__dirname, 'client/build')));
+    const buildPath = path.join(__dirname, '/client/dist');
 
-    app.get('*', (req, res) => {
-        res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
+    // Add verification
+    console.log('Build path:', buildPath);
+    console.log('Files in build dir:', fs.readdirSync(buildPath));
+
+    app.use(express.static(buildPath));
+
+    app.get('/*splat', (req, res) => {
+        res.sendFile(path.join(buildPath, 'index.html'));
     });
 }
 
