@@ -81,11 +81,12 @@ app.use('/api/messages', messagesRoutes);
 
 
 
-app.all('/{*splat}', (req, res, next) => {
-    const error = new Error(`Cannot find ${req.originalUrl} on this server`);
-    error.statusCode = 404;
-    next(error);
-});
+// app.all('/:any*', (req, res, next) => {
+//     const error = new Error(`Cannot find ${req.originalUrl} on this server`);
+//     error.statusCode = 404;
+//     next(error);
+// });
+
 
 
 
